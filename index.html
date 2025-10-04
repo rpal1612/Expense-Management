@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseFlow - Expense Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e5a8e;
+            --secondary-blue: #2a7bb8;
+            --accent-blue: #3d9dd9;
+            --dark-blue: #0d3b5f;
+            --light-blue: #e8f4fc;
+            --card-gradient: linear-gradient(135deg, #1e5a8e 0%, #2a7bb8 100%);
+            --bg-color: #f5f7fa;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --border-radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background: var(--card-gradient);
+            color: var(--text-light);
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            flex: 1;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Role Cards */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            border-color: var(--accent-blue);
+        }
+
+        .role-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-title {
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .role-description {
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .role-button {
+            display: inline-block;
+            background: var(--card-gradient);
+            color: var(--text-light);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .role-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 90, 142, 0.3);
+        }
+
+        /* Features Section */
+        .features-section {
+            margin: 4rem 0;
+            padding: 3rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .features-title {
+            text-align: center;
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .feature-description {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark-blue);
+            color: var(--text-light);
+            text-align: center;
+            padding: 2rem;
+            margin-top: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .welcome-title {
+                font-size: 2rem;
+            }
+
+            .roles-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .role-card {
+                padding: 2rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Auth Pages */
+        .auth-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .auth-title {
+            color: var(--primary-blue);
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            font-weight: bold;
+        }
+
+        .auth-form {
+            text-align: left;
+        }
+
+        .auth-form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .auth-form input,
+        .auth-form select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .auth-form input:focus,
+        .auth-form select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .auth-btn {
+            width: 100%;
+            background: var(--card-gradient);
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 1.5rem 0;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 90, 142, 0.3);
+        }
+
+        .auth-link {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+        .auth-switch {
+            margin-top: 1.5rem;
+            color: #7f8c8d;
+        }
+
+        .auth-back-btn {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary-blue);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .auth-back-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c53030;
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border: 1px solid #feb2b2;
+            display: none;
+        }
+
+        .success-message {
+            background: #f0fff4;
+            color: #38a169;
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border: 1px solid #9ae6b4;
+            display: none;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Main Landing Page Layout */
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--bg-color);
+        }
+
+        .product-section {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-section {
+            flex: 0 0 450px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-section {
+            margin-bottom: 3rem;
+        }
+
+        .logo-section .logo {
+            font-size: 3rem;
+            background: var(--card-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-section .tagline {
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .welcome-content {
+            margin-bottom: 3rem;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .main-description {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--card-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 90, 142, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-blue);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .features-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .feature-item .feature-icon {
+            font-size: 2rem;
+            width: 60px;
+            height: 60px;
+            background: var(--light-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .feature-content h3 {
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-content p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Modal Styles */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .auth-modal.active {
+            display: flex;
+        }
+
+        .auth-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 480px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Custom Scrollbar for Modal */
+        .auth-modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .auth-modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .auth-modal-content::-webkit-scrollbar-thumb {
+            background: var(--primary-blue);
+            border-radius: 10px;
+        }
+
+        .auth-modal-content::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-blue);
+        }
+
+        /* For Firefox */
+        .auth-modal-content {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-blue) #f1f1f1;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-40px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--light-blue);
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--primary-blue);
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: var(--primary-blue);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .modal-close:active {
+            transform: scale(0.95);
+        }
+
+        /* Auth Card Adjustments */
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: none;
+            border: 1px solid rgba(30, 90, 142, 0.1);
+        }
+
+        .auth-card .auth-title {
+            color: var(--primary-blue);
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            text-align: center;
+            position: relative;
+        }
+
+        .auth-card .auth-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--card-gradient);
+            border-radius: 2px;
+        }
+
+        .auth-form-group {
+            margin-bottom: 1.8rem;
+        }
+
+        .auth-form label {
+            display: block;
+            margin-bottom: 0.8rem;
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .auth-form input,
+        .auth-form select {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            border: 2px solid #e8ecf0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+            color: var(--text-dark);
+        }
+
+        .auth-form input:focus,
+        .auth-form select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(30, 90, 142, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .auth-form input:hover,
+        .auth-form select:hover {
+            border-color: var(--accent-blue);
+            background: white;
+        }
+
+        .auth-btn {
+            width: 100%;
+            background: var(--card-gradient);
+            color: white;
+            padding: 1.2rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 2rem 0 1.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .auth-btn:hover::before {
+            left: 100%;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(30, 90, 142, 0.4);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+
+        .auth-switch {
+            margin-top: 1.5rem;
+            color: #7f8c8d;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .auth-link {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .auth-link:hover {
+            color: var(--dark-blue);
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #fee, #fef5e7);
+            color: #c53030;
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #feb2b2;
+            display: none;
+            font-size: 0.9rem;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #f0fff4, #e6fffa);
+            color: #38a169;
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #9ae6b4;
+            display: none;
+            font-size: 0.9rem;
+            border-left: 4px solid #48bb78;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .auth-section {
+                flex: none;
+                box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+            }
+
+            .product-section {
+                padding: 2rem;
+            }
+
+            .features-showcase {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+            }
+
+            .feature-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .feature-item .feature-icon {
+                margin: 0 auto;
+            }
+
+            .product-section {
+                padding: 1.5rem;
+            }
+
+            .auth-section {
+                padding: 1.5rem;
+            }
+
+            .auth-modal-content {
+                padding: 2rem 1.5rem;
+                margin: 0.5rem;
+                max-width: 95vw;
+                border-radius: 16px;
+            }
+
+            .auth-card {
+                padding: 1.5rem 2rem;
+            }
+
+            .modal-close {
+                top: 1rem;
+                right: 1rem;
+                width: 32px;
+                height: 32px;
+                font-size: 1.1rem;
+            }
+
+            .logo-section .logo {
+                font-size: 3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 1.8rem;
+            }
+
+            .main-description {
+                font-size: 1rem;
+            }
+
+            .btn {
+                padding: 0.8rem 2rem;
+                font-size: 1rem;
+            }
+
+            .auth-modal-content {
+                padding: 1.5rem;
+                border-radius: 12px;
+            }
+
+            .auth-card .auth-title {
+                font-size: 1.7rem;
+            }
+
+            .auth-form input,
+            .auth-form select {
+                padding: 0.9rem 1rem;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Landing Page -->
+    <div id="landing-page" class="page active">
+        <div class="main-container">
+            <!-- Centered Product Info -->
+            <div class="product-section">
+                <div class="logo-section">
+                    <div class="logo">💼 ExpenseFlow</div>
+                    <div class="tagline">Advanced expense management with smart automation</div>
+                </div>
+                
+                <div class="welcome-content">
+                    <h1 class="main-title">Welcome to ExpenseFlow</h1>
+                    <p class="main-description">
+                        Experience streamlined expense management with our state-of-the-art OCR and multi-currency system. 
+                        Get started today with role-based access control!
+                    </p>
+                    
+                    <div class="auth-buttons">
+                        <button class="btn btn-primary" onclick="showSignupModal()">Register</button>
+                        <button class="btn btn-secondary" onclick="showLoginModal()">Login</button>
+                    </div>
+                </div>
+
+                <!-- Features Grid -->
+                <div class="features-showcase">
+                    <div class="feature-item">
+                        <div class="feature-icon">�</div>
+                        <div class="feature-content">
+                            <h3>Secure Role-Based Access</h3>
+                            <p>Our role management system ensures that only you can access your account with proper authentication.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-content">
+                            <h3>Fast & Efficient</h3>
+                            <p>Quick expense submission and approval routing to the right department with OCR automation.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">�</div>
+                        <div class="feature-content">
+                            <h3>Personalized Service</h3>
+                            <p>Get expense management tailored to your specific role and organizational priorities.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Hidden by default, will show as modal -->
+            <div class="auth-section" style="display: none;">
+                <!-- Login Form -->
+                <div id="main-login-form" class="auth-card">
+                    <h2 class="auth-title">Login</h2>
+                    <div id="main-login-error" class="error-message"></div>
+                    
+                    <form class="auth-form" onsubmit="handleMainLogin(event)">
+                        <div class="auth-form-group">
+                            <label for="main-login-email">Email:</label>
+                            <input type="email" id="main-login-email" name="email" required>
+                        </div>
+                        
+                        <div class="auth-form-group">
+                            <label for="main-login-password">Password:</label>
+                            <input type="password" id="main-login-password" name="password" required>
+                        </div>
+                        
+                        <div class="auth-form-group">
+                            <label for="main-login-role">Role:</label>
+                            <select id="main-login-role" name="role" required>
+                                <option value="">Select Role</option>
+                                <option value="employee">Employee</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn">Login</button>
+                    </form>
+                    
+                    <div class="auth-switch">
+                        Don't have an account? <a href="#" class="auth-link" onclick="showSignupModal()">Register here</a>
+                    </div>
+                </div>
+                
+                <!-- Signup Form -->
+                <div id="main-signup-form" class="auth-card" style="display: none;">
+                    <h2 class="auth-title">Register</h2>
+                    <div id="main-signup-error" class="error-message"></div>
+                    <div id="main-signup-success" class="success-message"></div>
+                    
+                    <form class="auth-form" onsubmit="handleMainSignup(event)">
+                        <div class="auth-form-group">
+                            <label for="main-signup-name">Name:</label>
+                            <input type="text" id="main-signup-name" name="name" required>
+                        </div>
+                        
+                        <div class="auth-form-group">
+                            <label for="main-signup-email">Email:</label>
+                            <input type="email" id="main-signup-email" name="email" required>
+                        </div>
+                        
+                        <div class="auth-form-group">
+                            <label for="main-signup-password">Password:</label>
+                            <input type="password" id="main-signup-password" name="password" required minlength="6">
+                        </div>
+                        
+                        <div class="auth-form-group">
+                            <label for="main-signup-confirm-password">Confirm Password:</label>
+                            <input type="password" id="main-signup-confirm-password" name="confirmPassword" required>
+                        </div>
+                        
+                        <div class="auth-form-group">
+                            <label for="main-signup-role">Role:</label>
+                            <select id="main-signup-role" name="role" required onchange="toggleMainCountrySection()">
+                                <option value="">Select Role</option>
+                                <option value="employee">Employee</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Country selection for Admin only -->
+                        <div id="main-country-section" class="auth-form-group" style="display: none;">
+                            <label for="main-signup-country">Country (Base Currency):</label>
+                            <select id="main-signup-country" name="country">
+                                <option value="">Select Country</option>
+                                <option value="US-USD">United States (USD)</option>
+                                <option value="GB-GBP">United Kingdom (GBP)</option>
+                                <option value="EU-EUR">European Union (EUR)</option>
+                                <option value="IN-INR">India (INR)</option>
+                                <option value="CA-CAD">Canada (CAD)</option>
+                                <option value="AU-AUD">Australia (AUD)</option>
+                                <option value="JP-JPY">Japan (JPY)</option>
+                                <option value="SG-SGD">Singapore (SGD)</option>
+                                <option value="CH-CHF">Switzerland (CHF)</option>
+                                <option value="CN-CNY">China (CNY)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn">Register</button>
+                    </form>
+                    
+                    <div class="auth-switch">
+                        Already have an account? <a href="#" class="auth-link" onclick="showLoginModal()">Login here</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Overlay for Auth Forms -->
+    <div id="auth-modal" class="auth-modal">
+        <div class="auth-modal-content">
+            <button class="modal-close" onclick="closeAuthModal()">×</button>
+            <div id="modal-content-placeholder">
+                <!-- Auth forms will be moved here when modal is opened -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Pages -->
+    <div id="auth-page" class="page">
+        <div class="auth-container">
+            <button class="auth-back-btn" onclick="showLandingPage()">← Back to Home</button>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="auth-card">
+                <h2 class="auth-title">Login</h2>
+                <div id="login-error" class="error-message"></div>
+                
+                <form class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="auth-form-group">
+                        <label for="login-email">Email:</label>
+                        <input type="email" id="login-email" name="email" required>
+                    </div>
+                    
+                    <div class="auth-form-group">
+                        <label for="login-password">Password:</label>
+                        <input type="password" id="login-password" name="password" required>
+                    </div>
+                    
+                    <button type="submit" class="auth-btn">Login</button>
+                </form>
+                
+                <div class="auth-switch">
+                    Don't have an account? <a href="#" class="auth-link" onclick="showSignupForm()">Sign up here</a>
+                </div>
+            </div>
+            
+            <!-- Signup Form -->
+            <div id="signup-form" class="auth-card" style="display: none;">
+                <h2 class="auth-title">Signup</h2>
+                <div id="signup-error" class="error-message"></div>
+                <div id="signup-success" class="success-message"></div>
+                
+                <form class="auth-form" onsubmit="handleSignup(event)">
+                    <div class="auth-form-group">
+                        <label for="signup-name">Name:</label>
+                        <input type="text" id="signup-name" name="name" required>
+                    </div>
+                    
+                    <div class="auth-form-group">
+                        <label for="signup-email">Email:</label>
+                        <input type="email" id="signup-email" name="email" required>
+                    </div>
+                    
+                    <div class="auth-form-group">
+                        <label for="signup-password">Password:</label>
+                        <input type="password" id="signup-password" name="password" required minlength="6">
+                    </div>
+                    
+                    <div class="auth-form-group">
+                        <label for="signup-confirm-password">Confirm Password:</label>
+                        <input type="password" id="signup-confirm-password" name="confirmPassword" required>
+                    </div>
+                    
+                    <div class="auth-form-group">
+                        <label for="signup-role">Role:</label>
+                        <select id="signup-role" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="employee">Employee</option>
+                            <option value="manager">Manager</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Country selection for Admin only -->
+                    <div id="country-section" class="auth-form-group" style="display: none;">
+                        <label for="signup-country">Country (Base Currency):</label>
+                        <select id="signup-country" name="country">
+                            <option value="">Select Country</option>
+                            <option value="US-USD">United States (USD)</option>
+                            <option value="GB-GBP">United Kingdom (GBP)</option>
+                            <option value="EU-EUR">European Union (EUR)</option>
+                            <option value="IN-INR">India (INR)</option>
+                            <option value="CA-CAD">Canada (CAD)</option>
+                            <option value="AU-AUD">Australia (AUD)</option>
+                            <option value="JP-JPY">Japan (JPY)</option>
+                            <option value="SG-SGD">Singapore (SGD)</option>
+                            <option value="CH-CHF">Switzerland (CHF)</option>
+                            <option value="CN-CNY">China (CNY)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="auth-btn">Signup</button>
+                </form>
+                
+                <div class="auth-switch">
+                    Already have an account? <a href="#" class="auth-link" onclick="showLoginForm()">Login here</a>
+                </div>
+            </div>
+        </div>
+    </div>    <script>
+        // Validation functions
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validatePassword(password) {
+            // At least 6 characters, contains at least one letter and one number
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,}$/;
+            return passwordRegex.test(password);
+        }
+
+        function validateName(name) {
+            // At least 2 characters, only letters and spaces
+            const nameRegex = /^[A-Za-z\s]{2,50}$/;
+            return nameRegex.test(name.trim());
+        }
+
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const existingError = field.parentNode.querySelector('.field-error');
+            
+            // Remove existing error
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Add error styling to field
+            field.style.borderColor = '#e53e3e';
+            field.style.boxShadow = '0 0 0 4px rgba(229, 62, 62, 0.1)';
+            
+            // Create and add error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error';
+            errorDiv.textContent = message;
+            errorDiv.style.cssText = `
+                color: #e53e3e;
+                font-size: 0.8rem;
+                margin-top: 0.3rem;
+                font-weight: 500;
+            `;
+            
+            field.parentNode.appendChild(errorDiv);
+        }
+
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const existingError = field.parentNode.querySelector('.field-error');
+            
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Reset field styling
+            field.style.borderColor = '#e8ecf0';
+            field.style.boxShadow = '';
+        }
+
+        function clearAllFieldErrors(formPrefix) {
+            const form = document.querySelector(`#${formPrefix}-form form, #${formPrefix} form`);
+            if (form) {
+                const inputs = form.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    clearFieldError(input.id);
+                });
+            }
+        }
+
+        // Real-time validation event listeners
+        function addValidationListeners() {
+            // Email validation
+            document.addEventListener('input', function(e) {
+                if (e.target.type === 'email') {
+                    if (e.target.value && !validateEmail(e.target.value)) {
+                        showFieldError(e.target.id, 'Please enter a valid email address');
+                    } else {
+                        clearFieldError(e.target.id);
+                    }
+                }
+            });
+
+            // Password validation
+            document.addEventListener('input', function(e) {
+                if (e.target.type === 'password' && e.target.name === 'password') {
+                    if (e.target.value && !validatePassword(e.target.value)) {
+                        showFieldError(e.target.id, 'Password must be at least 6 characters with letters and numbers');
+                    } else {
+                        clearFieldError(e.target.id);
+                    }
+                }
+            });
+
+            // Confirm password validation
+            document.addEventListener('input', function(e) {
+                if (e.target.name === 'confirmPassword') {
+                    const passwordField = e.target.form.querySelector('input[name="password"]');
+                    if (e.target.value && passwordField && e.target.value !== passwordField.value) {
+                        showFieldError(e.target.id, 'Passwords do not match');
+                    } else {
+                        clearFieldError(e.target.id);
+                    }
+                }
+            });
+
+            // Name validation
+            document.addEventListener('input', function(e) {
+                if (e.target.name === 'name') {
+                    if (e.target.value && !validateName(e.target.value)) {
+                        showFieldError(e.target.id, 'Name must be 2-50 characters, letters only');
+                    } else {
+                        clearFieldError(e.target.id);
+                    }
+                }
+            });
+        }
+
+        // Modal functions
+        function showLoginModal() {
+            clearMainMessages();
+            showLoginPage();
+            moveAuthFormsToModal();
+            document.getElementById('auth-modal').classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function showSignupModal() {
+            clearMainMessages();
+            showSignupPage();
+            moveAuthFormsToModal();
+            document.getElementById('auth-modal').classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+            moveAuthFormsBack();
+        }
+
+        function moveAuthFormsToModal() {
+            const authSection = document.querySelector('.auth-section');
+            const modalPlaceholder = document.getElementById('modal-content-placeholder');
+            
+            // Move auth forms to modal
+            while (authSection.firstChild) {
+                modalPlaceholder.appendChild(authSection.firstChild);
+            }
+        }
+
+        function moveAuthFormsBack() {
+            const authSection = document.querySelector('.auth-section');
+            const modalPlaceholder = document.getElementById('modal-content-placeholder');
+            
+            // Move auth forms back to original location
+            while (modalPlaceholder.firstChild) {
+                authSection.appendChild(modalPlaceholder.firstChild);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('auth-modal');
+            if (e.target === modal) {
+                closeAuthModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAuthModal();
+            }
+        });
+
+        // Main page auth functions
+        function showLoginPage() {
+            document.getElementById('main-login-form').style.display = 'block';
+            document.getElementById('main-signup-form').style.display = 'none';
+            clearMainMessages();
+        }
+
+        function showSignupPage() {
+            document.getElementById('main-login-form').style.display = 'none';
+            document.getElementById('main-signup-form').style.display = 'block';
+            clearMainMessages();
+        }
+
+        function clearMainMessages() {
+            document.getElementById('main-login-error').style.display = 'none';
+            document.getElementById('main-signup-error').style.display = 'none';
+            document.getElementById('main-signup-success').style.display = 'none';
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function showSuccess(elementId, message) {
+            const successElement = document.getElementById(elementId);
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+        }
+
+        // Toggle country selection based on role for main signup
+        function toggleMainCountrySection() {
+            const role = document.getElementById('main-signup-role').value;
+            const countrySection = document.getElementById('main-country-section');
+            const countrySelect = document.getElementById('main-signup-country');
+            
+            if (role === 'admin') {
+                countrySection.style.display = 'block';
+                countrySelect.required = true;
+            } else {
+                countrySection.style.display = 'none';
+                countrySelect.required = false;
+                countrySelect.value = '';
+            }
+        }
+
+        // Handle Main Login
+        function handleMainLogin(e) {
+            e.preventDefault();
+            clearMainMessages();
+            clearAllFieldErrors('main-login');
+            
+            const email = document.getElementById('main-login-email').value.trim();
+            const password = document.getElementById('main-login-password').value;
+            const role = document.getElementById('main-login-role').value;
+            
+            let hasErrors = false;
+            
+            // Email validation
+            if (!email) {
+                showFieldError('main-login-email', 'Email is required');
+                hasErrors = true;
+            } else if (!validateEmail(email)) {
+                showFieldError('main-login-email', 'Please enter a valid email address');
+                hasErrors = true;
+            }
+            
+            // Password validation
+            if (!password) {
+                showFieldError('main-login-password', 'Password is required');
+                hasErrors = true;
+            } else if (password.length < 6) {
+                showFieldError('main-login-password', 'Password must be at least 6 characters');
+                hasErrors = true;
+            }
+            
+            // Role validation
+            if (!role) {
+                showFieldError('main-login-role', 'Please select your role');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                showError('main-login-error', 'Please fix the errors above and try again.');
+                return;
+            }
+            
+            // Check default credentials based on selected role
+            const defaultCred = defaultCredentials[role];
+            
+            if (email === defaultCred.email && password === defaultCred.password) {
+                // Successful login
+                localStorage.setItem('userRole', role);
+                localStorage.setItem('userEmail', email);
+                
+                // Redirect to appropriate dashboard
+                const dashboards = {
+                    admin: 'admin/admin_panel.html',
+                    manager: 'manager/manager_dashboard.html',
+                    employee: 'employee/employee_dashboard.html'
+                };
+                
+                // Show success message before redirect
+                showSuccess('main-login-error', `Login successful! Redirecting to ${role} dashboard...`);
+                document.getElementById('main-login-error').className = 'success-message';
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = dashboards[role];
+                }, 1500);
+                
+            } else {
+                showError('main-login-error', 'Invalid credentials. Please check your email, password, and role.');
+            }
+        }
+
+        // Handle Main Signup
+        function handleMainSignup(e) {
+            e.preventDefault();
+            clearMainMessages();
+            clearAllFieldErrors('main-signup');
+            
+            const name = document.getElementById('main-signup-name').value.trim();
+            const email = document.getElementById('main-signup-email').value.trim();
+            const password = document.getElementById('main-signup-password').value;
+            const confirmPassword = document.getElementById('main-signup-confirm-password').value;
+            const role = document.getElementById('main-signup-role').value;
+            const country = document.getElementById('main-signup-country').value;
+            
+            let hasErrors = false;
+            
+            // Name validation
+            if (!name) {
+                showFieldError('main-signup-name', 'Name is required');
+                hasErrors = true;
+            } else if (!validateName(name)) {
+                showFieldError('main-signup-name', 'Name must be 2-50 characters, letters and spaces only');
+                hasErrors = true;
+            }
+            
+            // Email validation
+            if (!email) {
+                showFieldError('main-signup-email', 'Email is required');
+                hasErrors = true;
+            } else if (!validateEmail(email)) {
+                showFieldError('main-signup-email', 'Please enter a valid email address');
+                hasErrors = true;
+            }
+            
+            // Password validation
+            if (!password) {
+                showFieldError('main-signup-password', 'Password is required');
+                hasErrors = true;
+            } else if (!validatePassword(password)) {
+                showFieldError('main-signup-password', 'Password must be at least 6 characters with letters and numbers');
+                hasErrors = true;
+            }
+            
+            // Confirm password validation
+            if (!confirmPassword) {
+                showFieldError('main-signup-confirm-password', 'Please confirm your password');
+                hasErrors = true;
+            } else if (password !== confirmPassword) {
+                showFieldError('main-signup-confirm-password', 'Passwords do not match');
+                hasErrors = true;
+            }
+            
+            // Role validation
+            if (!role) {
+                showFieldError('main-signup-role', 'Please select a role');
+                hasErrors = true;
+            }
+            
+            // Country validation for admin
+            if (role === 'admin' && !country) {
+                showFieldError('main-signup-country', 'Please select a country for the base currency');
+                hasErrors = true;
+            }
+            
+            // Check if email already exists (simulate)
+            const existingEmails = ['admin@expenseflow.com', 'manager@expenseflow.com', 'employee@expenseflow.com'];
+            if (existingEmails.includes(email.toLowerCase())) {
+                showFieldError('main-signup-email', 'This email is already registered');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                showError('main-signup-error', 'Please fix the errors above and try again.');
+                return;
+            }
+            
+            // Simulate successful signup
+            const userData = {
+                name,
+                email,
+                role,
+                country: role === 'admin' ? country : null,
+                signupDate: new Date().toISOString()
+            };
+            
+            // Store user data (in a real app, this would be sent to backend)
+            localStorage.setItem('signupData', JSON.stringify(userData));
+            
+            let successMessage = `Account created successfully for ${name} as ${role}!`;
+            if (role === 'admin' && country) {
+                const [countryName, currency] = country.split('-');
+                successMessage += ` Base currency set to ${currency}.`;
+            }
+            
+            showSuccess('main-signup-success', successMessage);
+            
+            // Clear form and switch to login after delay
+            setTimeout(() => {
+                document.getElementById('main-signup-form').querySelector('form').reset();
+                clearAllFieldErrors('main-signup');
+                showLoginPage();
+                showSuccess('main-login-error', 'Account created! Please login with your credentials.');
+                document.getElementById('main-login-error').className = 'success-message';
+                document.getElementById('main-login-error').style.display = 'block';
+            }, 3000);
+        }
+
+        // Legacy functions for old auth page (keeping for compatibility)
+        let currentRole = '';
+
+        function showLandingPage() {
+            document.getElementById('landing-page').classList.add('active');
+            document.getElementById('auth-page').classList.remove('active');
+        }
+
+        function showAuthPage(role) {
+            currentRole = role;
+            document.getElementById('landing-page').classList.remove('active');
+            document.getElementById('auth-page').classList.add('active');
+            showLoginForm();
+        }
+
+        function showLoginForm() {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('signup-form').style.display = 'none';
+            clearMessages();
+        }
+
+        function showSignupForm() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('signup-form').style.display = 'block';
+            clearMessages();
+            
+            document.getElementById('signup-role').value = currentRole;
+            toggleCountrySection();
+        }
+
+        function clearMessages() {
+            document.getElementById('login-error').style.display = 'none';
+            document.getElementById('signup-error').style.display = 'none';
+            document.getElementById('signup-success').style.display = 'none';
+        }
+
+        function toggleCountrySection() {
+            const role = document.getElementById('signup-role').value;
+            const countrySection = document.getElementById('country-section');
+            const countrySelect = document.getElementById('signup-country');
+            
+            if (role === 'admin') {
+                countrySection.style.display = 'block';
+                countrySelect.required = true;
+            } else {
+                countrySection.style.display = 'none';
+                countrySelect.required = false;
+                countrySelect.value = '';
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            clearMessages();
+            clearAllFieldErrors('login');
+            
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            let hasErrors = false;
+            
+            // Email validation
+            if (!email) {
+                showFieldError('login-email', 'Email is required');
+                hasErrors = true;
+            } else if (!validateEmail(email)) {
+                showFieldError('login-email', 'Please enter a valid email address');
+                hasErrors = true;
+            }
+            
+            // Password validation
+            if (!password) {
+                showFieldError('login-password', 'Password is required');
+                hasErrors = true;
+            } else if (password.length < 6) {
+                showFieldError('login-password', 'Password must be at least 6 characters');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                showError('login-error', 'Please fix the errors above and try again.');
+                return;
+            }
+            
+            const defaultCred = defaultCredentials[currentRole];
+            
+            if (email === defaultCred.email && password === defaultCred.password) {
+                localStorage.setItem('userRole', currentRole);
+                localStorage.setItem('userEmail', email);
+                
+                const dashboards = {
+                    admin: 'admin/admin_panel.html',
+                    manager: 'manager/manager_dashboard.html',
+                    employee: 'employee/employee_dashboard.html'
+                };
+                
+                alert(`Login successful! Welcome ${currentRole}!`);
+                
+                setTimeout(() => {
+                    window.location.href = dashboards[currentRole];
+                }, 1000);
+                
+            } else {
+                showError('login-error', 'Invalid credentials. Please check your email and password.');
+            }
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            clearMessages();
+            clearAllFieldErrors('signup');
+            
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+            const role = document.getElementById('signup-role').value;
+            const country = document.getElementById('signup-country').value;
+            
+            let hasErrors = false;
+            
+            // Name validation
+            if (!name) {
+                showFieldError('signup-name', 'Name is required');
+                hasErrors = true;
+            } else if (!validateName(name)) {
+                showFieldError('signup-name', 'Name must be 2-50 characters, letters and spaces only');
+                hasErrors = true;
+            }
+            
+            // Email validation
+            if (!email) {
+                showFieldError('signup-email', 'Email is required');
+                hasErrors = true;
+            } else if (!validateEmail(email)) {
+                showFieldError('signup-email', 'Please enter a valid email address');
+                hasErrors = true;
+            }
+            
+            // Password validation
+            if (!password) {
+                showFieldError('signup-password', 'Password is required');
+                hasErrors = true;
+            } else if (!validatePassword(password)) {
+                showFieldError('signup-password', 'Password must be at least 6 characters with letters and numbers');
+                hasErrors = true;
+            }
+            
+            // Confirm password validation
+            if (!confirmPassword) {
+                showFieldError('signup-confirm-password', 'Please confirm your password');
+                hasErrors = true;
+            } else if (password !== confirmPassword) {
+                showFieldError('signup-confirm-password', 'Passwords do not match');
+                hasErrors = true;
+            }
+            
+            // Role validation
+            if (!role) {
+                showFieldError('signup-role', 'Please select a role');
+                hasErrors = true;
+            }
+            
+            // Country validation for admin
+            if (role === 'admin' && !country) {
+                showFieldError('signup-country', 'Please select a country for the base currency');
+                hasErrors = true;
+            }
+            
+            // Check if email already exists (simulate)
+            const existingEmails = ['admin@expenseflow.com', 'manager@expenseflow.com', 'employee@expenseflow.com'];
+            if (existingEmails.includes(email.toLowerCase())) {
+                showFieldError('signup-email', 'This email is already registered');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                showError('signup-error', 'Please fix the errors above and try again.');
+                return;
+            }
+            
+            const userData = {
+                name,
+                email,
+                role,
+                country: role === 'admin' ? country : null,
+                signupDate: new Date().toISOString()
+            };
+            
+            localStorage.setItem('signupData', JSON.stringify(userData));
+            
+            let successMessage = `Account created successfully for ${name} as ${role}!`;
+            if (role === 'admin' && country) {
+                const [countryName, currency] = country.split('-');
+                successMessage += ` Base currency set to ${currency}.`;
+            }
+            
+            showSuccess('signup-success', successMessage);
+            
+            setTimeout(() => {
+                document.getElementById('signup-form').querySelector('form').reset();
+                clearAllFieldErrors('signup');
+                showLoginForm();
+                showSuccess('login-error', 'Account created! Please login with your credentials.');
+                document.getElementById('login-error').className = 'success-message';
+                document.getElementById('login-error').style.display = 'block';
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Don't show any auth forms by default - they'll appear in modals
+            
+            // Add fade-in animation
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease-in';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Simple analytics tracking
+        function trackPageLoad() {
+            console.log('ExpenseFlow landing page loaded at:', new Date().toISOString());
+        }
+
+        trackPageLoad();
+    </script>
+</body>
+</html>
