@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 import os
 from werkzeug.utils import secure_filename
 import pytesseract
@@ -7,15 +7,23 @@ import re
 from datetime import datetime
 import traceback
 import psycopg2
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import RealDictCursor, extras
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_cors import CORS
+import json
+from pathlib import Path
+from dotenv import load_dotenv
 
-app = Flask(__name__)
+app = Flask(_name_)
+CORS(app)
 app.secret_key = 'your-secret-key-here-change-in-production'
+
+# --- CONFIGURATION ---
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-# --- DATABASE CONFIGURATION ---
+# Database Configuration
 DATABASE_CONFIG = {
     'host': 'localhost',
     'database': 'postgres',
@@ -24,11 +32,21 @@ DATABASE_CONFIG = {
     'port': 5433
 }
 
-# --- TESSERACT CONFIGURATION ---
+# Tesseract Configuration
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
+# Create uploads directory
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Base directory for serving static files
+BASE_DIR = os.path.dirname(os.path.abspath(_file_))
+
+# Load environment variables
+env_path = Path(BASE_DIR) / '.env'
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+
+# --- DATABASE FUNCTIONS ---
 
 def get_db_connection():
     """Create and return a database connection."""
@@ -40,9 +58,8 @@ def get_db_connection():
         print(f"❌ Database connection error: {e}")
         return None
 
-
 def init_database():
-    """Initialize the database and create the expenses table if it doesn't exist."""
+    """Initialize the database and create necessary tables."""
     conn = get_db_connection()
     if conn is None:
         print("Failed to connect to database!")
@@ -51,6 +68,7 @@ def init_database():
     try:
         cursor = conn.cursor()
         
+        # Create expenses table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS expenses (
                 id SERIAL PRIMARY KEY,
@@ -59,16 +77,53 @@ def init_database():
                 category VARCHAR(100) NOT NULL,
                 date DATE NOT NULL,
                 description TEXT,
+                status VARCHAR(20) DEFAULT 'pending',
+                employee_name VARCHAR(100),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
         
+        # Create users table for authentication
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id SERIAL PRIMARY KEY,
+                company_id INTEGER DEFAULT 1,
+                full_name VARCHAR(100) NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                role VARCHAR(20) DEFAULT 'Employee',
+                is_manager_approver BOOLEAN DEFAULT FALSE,
+                manager_id INTEGER REFERENCES users(user_id),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        
+        # Create approval transactions table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS approval_transactions (
+                transaction_id SERIAL PRIMARY KEY,
+                expense_id INTEGER REFERENCES expenses(id),
+                approver_id INTEGER REFERENCES users(user_id),
+                step_sequence INTEGER,
+                status VARCHAR(20),
+                comments TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        
+        # Create indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_expenses_status ON expenses(status);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);")
         
         conn.commit()
         print("✅ Database initialized successfully!")
+        
+        # Create test users
+        create_test_users(cursor, conn)
+        
         return True
         
     except psycopg2.Error as e:
@@ -80,6 +135,60 @@ def init_database():
             cursor.close()
             conn.close()
 
+def create_test_users(cursor, conn):
+    """Create test users if they don't exist."""
+    try:
+        # Check if test users already exist
+        cursor.execute("SELECT COUNT(*) FROM users WHERE email LIKE '%@flow.com'")
+        existing_users = cursor.fetchone()[0]
+        
+        if existing_users == 0:
+            print('Creating test users...')
+            
+            # Test users with hashed passwords
+            test_users = [
+                ('John Doe', 'john.admin@flow.com', 'admin123', 'Admin', True, None),
+                ('Sarah Johnson', 'sarah.manager@flow.com', 'manager123', 'Manager', True, None),
+                ('Mike Chen', 'mike.employee@flow.com', 'employee123', 'Employee', False, 2),
+                ('Emily Davis', 'emily.employee@flow.com', 'employee123', 'Employee', False, 2),
+                ('David Wilson', 'david.employee@flow.com', 'employee123', 'Employee', False, 2)
+            ]
+            
+            user_ids = {}
+            
+            for full_name, email, password, role, is_manager_approver, manager_id in test_users:
+                password_hash = generate_password_hash(password)
+                cursor.execute("""
+                    INSERT INTO users (full_name, email, password_hash, role, is_manager_approver, manager_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING user_id;
+                """, (full_name, email, password_hash, role, is_manager_approver, manager_id))
+                
+                user_id = cursor.fetchone()[0]
+                user_ids[email] = user_id
+            
+            # Update manager relationships
+            cursor.execute("""
+                UPDATE users 
+                SET manager_id = %s
+                WHERE email = 'sarah.manager@flow.com'
+            """, (user_ids['john.admin@flow.com'],))
+            
+            conn.commit()
+            print('✅ Test users created successfully.')
+            print('Test credentials:')
+            print('  Admin: john.admin@flow.com / admin123')
+            print('  Manager: sarah.manager@flow.com / manager123')
+            print('  Employee: mike.employee@flow.com / employee123')
+            print('  Employee: emily.employee@flow.com / employee123')
+        else:
+            print('✅ Test users already exist.')
+            
+    except Exception as e:
+        print(f'❌ Failed to create test users: {e}')
+        conn.rollback()
+
+# --- EXPENSE MANAGEMENT FUNCTIONS ---
 
 def save_expense_to_db(expense_data):
     """Save expense data to PostgreSQL database."""
@@ -112,15 +221,16 @@ def save_expense_to_db(expense_data):
         print(f"   Description: {expense_data['description']}")
         
         cursor.execute("""
-            INSERT INTO expenses (amount, currency, category, date, description)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO expenses (amount, currency, category, date, description, employee_name, status)
+            VALUES (%s, %s, %s, %s, %s, %s, 'pending')
             RETURNING id;
         """, (
             amount,
             expense_data['currency'],
             expense_data['category'],
             date_obj,
-            expense_data['description']
+            expense_data['description'],
+            expense_data.get('employee_name', 'Unknown Employee')
         ))
         
         expense_id = cursor.fetchone()[0]
@@ -146,7 +256,6 @@ def save_expense_to_db(expense_data):
             cursor.close()
             conn.close()
 
-
 def get_all_expenses():
     """Retrieve all expenses from the database."""
     conn = get_db_connection()
@@ -167,7 +276,62 @@ def get_all_expenses():
             cursor.close()
             conn.close()
 
-# ... (Keep your existing extraction functions the same) ...
+def get_pending_expenses():
+    """Retrieve pending expenses for approval."""
+    conn = get_db_connection()
+    if conn is None:
+        return []
+    
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT * FROM expenses WHERE status = 'pending' ORDER BY date DESC, created_at DESC;")
+        expenses = cursor.fetchall()
+        return expenses
+    except psycopg2.Error as e:
+        print(f"❌ Error fetching pending expenses: {e}")
+        return []
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+def update_expense_status(expense_id, status, comments="", approver_id=None):
+    """Update expense status and log approval transaction."""
+    conn = get_db_connection()
+    if conn is None:
+        return False, "Database connection failed"
+    
+    try:
+        cursor = conn.cursor()
+        
+        # Update expense status
+        cursor.execute("""
+            UPDATE expenses 
+            SET status = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (status, expense_id))
+        
+        # Log approval transaction if approver provided
+        if approver_id:
+            cursor.execute("""
+                INSERT INTO approval_transactions (expense_id, approver_id, status, comments)
+                VALUES (%s, %s, %s, %s)
+            """, (expense_id, approver_id, status, comments))
+        
+        conn.commit()
+        return True, "Expense status updated successfully"
+        
+    except psycopg2.Error as e:
+        error_msg = f"Database error: {e}"
+        print(f"❌ {error_msg}")
+        conn.rollback()
+        return False, error_msg
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+# --- RECEIPT PROCESSING FUNCTIONS ---
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -286,11 +450,18 @@ def extract_receipt_data(image_path):
         print(f"ERROR extracting data: {e}")
         return {}
 
+# --- ROUTES ---
 
+# Main pages
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/manager')
+def manager_dashboard():
+    return render_template('manager_dashboard.html')
+
+# Receipt processing routes
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'receipt' not in request.files:
@@ -328,7 +499,8 @@ def submit():
         'currency': request.form.get('currency', '').strip(),
         'category': request.form.get('category', '').strip(),
         'date': request.form.get('date', '').strip(),
-        'description': request.form.get('description', '').strip()
+        'description': request.form.get('description', '').strip(),
+        'employee_name': request.form.get('employee_name', 'Unknown Employee')
     }
 
     print(f"🔍 Processed expense data: {expense_data}")
@@ -377,6 +549,162 @@ def view_expenses():
     print(f"📋 Displaying {len(expenses)} expenses")
     return render_template('expenses.html', expenses=expenses)
 
+# API Routes for Manager Dashboard
+@app.route('/api/manager/dashboard')
+def manager_dashboard_data():
+    """API endpoint for manager dashboard data"""
+    try:
+        all_expenses = get_all_expenses()
+        pending_expenses = get_pending_expenses()
+        
+        # Calculate total spent (only approved expenses)
+        total_spent = sum(float(expense['amount']) for expense in all_expenses if expense['status'] == 'approved')
+        
+        response_data = {
+            "totalSpentYTD": total_spent,
+            "pendingApprovals": pending_expenses,
+            "allTeamExpenses": all_expenses
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        print(f"❌ Error fetching dashboard data: {e}")
+        return jsonify({"error": "Failed to fetch dashboard data"}), 500
+
+@app.route('/api/expenses/process', methods=['POST'])
+def process_approval():
+    """API endpoint to process expense approvals/rejections"""
+    try:
+        data = request.get_json()
+        expense_id = data.get('expenseId')
+        action = data.get('action')  # 'approve' or 'reject'
+        comments = data.get('comments', '')
+        
+        if not expense_id or not action:
+            return jsonify({"error": "Missing required fields"}), 400
+        
+        # Map action to status
+        status = 'approved' if action.lower() == 'approve' else 'rejected'
+        
+        success, message = update_expense_status(expense_id, status, comments)
+        
+        if success:
+            return jsonify({
+                "message": f"Expense {action}ed successfully",
+                "newStatus": status
+            })
+        else:
+            return jsonify({"error": message}), 500
+            
+    except Exception as e:
+        print(f"❌ Error processing approval: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+# Authentication routes
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    """Handle user login"""
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not email or not password:
+        return jsonify({'message': 'Email and password are required'}), 400
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'message': 'Database connection failed'}), 500
+    
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        
+        if user and check_password_hash(user['password_hash'], password):
+            user_data = {
+                'user_id': user['user_id'],
+                'full_name': user['full_name'],
+                'email': user['email'],
+                'role': user['role']
+            }
+            
+            # Determine redirect based on role
+            if user['role'].lower() == 'admin':
+                redirect_path = '/admin/dashboard'
+            elif user['role'].lower() == 'manager':
+                redirect_path = '/manager'
+            else:
+                redirect_path = '/employee/dashboard'
+                
+            return jsonify({
+                'message': 'Login successful',
+                'user': user_data,
+                'redirect': redirect_path
+            })
+        else:
+            return jsonify({'message': 'Invalid credentials'}), 401
+            
+    except Exception as e:
+        print(f"❌ Login error: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    """Handle user registration"""
+    data = request.get_json()
+    full_name = data.get('full_name')
+    email = data.get('email')
+    password = data.get('password')
+    role = data.get('role', 'Employee')
+    
+    if not all([full_name, email, password]):
+        return jsonify({'message': 'All fields are required'}), 400
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'message': 'Database connection failed'}), 500
+    
+    try:
+        cursor = conn.cursor()
+        
+        # Check if email exists
+        cursor.execute("SELECT 1 FROM users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({'message': 'Email already registered'}), 400
+        
+        # Hash password and create user
+        password_hash = generate_password_hash(password)
+        is_manager_approver = (role.lower() == 'manager')
+        
+        cursor.execute("""
+            INSERT INTO users (full_name, email, password_hash, role, is_manager_approver)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING user_id
+        """, (full_name, email, password_hash, role, is_manager_approver))
+        
+        user_id = cursor.fetchone()[0]
+        conn.commit()
+        
+        return jsonify({
+            'message': 'User registered successfully',
+            'user_id': user_id
+        }), 201
+        
+    except Exception as e:
+        print(f"❌ Registration error: {e}")
+        conn.rollback()
+        return jsonify({'message': 'Internal server error'}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+# Debug routes
 @app.route('/debug-db')
 def debug_db():
     """Debug endpoint to check database status"""
@@ -401,7 +729,7 @@ def debug_db():
         count = cursor.fetchone()[0]
         
         # Get recent expenses
-        cursor.execute("SELECT id, amount, category, date FROM expenses ORDER BY id DESC LIMIT 5;")
+        cursor.execute("SELECT id, amount, category, date, status FROM expenses ORDER BY id DESC LIMIT 5;")
         recent_expenses = cursor.fetchall()
         
         result = f"""
@@ -414,7 +742,7 @@ def debug_db():
         """
         
         for expense in recent_expenses:
-            result += f"<li>ID: {expense[0]}, Amount: {expense[1]}, Category: {expense[2]}, Date: {expense[3]}</li>"
+            result += f"<li>ID: {expense[0]}, Amount: {expense[1]}, Category: {expense[2]}, Date: {expense[3]}, Status: {expense[4]}</li>"
         
         result += "</ul>"
         return result
@@ -434,7 +762,8 @@ def test_add_expense():
         'currency': 'INR',
         'category': 'Food & Dining',
         'date': '2024-01-15',
-        'description': 'Test expense from debug route'
+        'description': 'Test expense from debug route',
+        'employee_name': 'Test User'
     }
     
     success, result = save_expense_to_db(test_data)
@@ -444,8 +773,23 @@ def test_add_expense():
     else:
         return f"❌ Failed to add test expense: {result}"
 
+@app.route('/api/health')
+def health_check():
+    """Health check endpoint"""
+    try:
+        conn = get_db_connection()
+        if conn:
+            conn.close()
+            return jsonify({'status': 'healthy', 'database': 'connected'})
+        else:
+            return jsonify({'status': 'degraded', 'database': 'disconnected'}), 503
+    except Exception as e:
+        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
 
-if __name__ == '__main__':
-    print("Initializing database...")
+# --- INITIALIZATION ---
+if _name_ == '_main_':
+    print("🚀 Initializing ExpenseFlow Application...")
+    print("📊 Initializing database...")
     init_database()
+    print("🌐 Starting Flask server...")
     app.run(debug=True, port=5000)
