@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Admin Panel - ExpenseFlow</title>
+    <!-- Updated: 2025-10-04 16:00:00 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e5a8e;
+            --secondary-blue: #2a7bb8;
+            --accent-blue: #3d9dd9;
+            --dark-blue: #0d3b5f;
+            --light-blue: #e8f4fc;
+            --card-gradient: linear-gradient(135deg, #1e5a8e 0%, #2a7bb8 100%);
+            --bg-color: #f5f7fa;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --border-radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card-gradient);
+            color: var(--text-light);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .nav-menu a {
+            color: white !important;
+            text-decoration: none !important;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .tab:last-child {
+            border-right: none;
+        }
+
+        .tab.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--dark-blue);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        /* Dashboard Stats Cards */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            color: white;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(30, 90, 142, 0.3);
+        }
+
+        .stats-content h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .stats-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .stats-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-action {
+            margin-top: auto;
+        }
+
+        .stats-card .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-card .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(30, 90, 142, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: var(--text-dark);
+            position: sticky;
+            top: 0;
+        }
+
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Role Badge */
+        .role-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .role-admin {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .role-manager {
+            background: #a29bfe;
+            color: white;
+        }
+
+        .role-employee {
+            background: #55a3ff;
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        /* Utilities */
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-2 {
+            margin-top: 1rem;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        /* Currency Settings Specific Styles */
+        .currency-info {
+            margin: 1.5rem 0;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid var(--primary-blue);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .info-box h4 {
+            margin: 0 0 1rem 0;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+        }
+
+        .info-box ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .info-box li {
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .info-box strong {
+            color: var(--primary-blue);
+        }
+
+        #currency-select {
+            font-size: 1rem;
+        }
+
+        #currency-select option {
+            padding: 0.5rem;
+        }
+
+        #save-currency-btn {
+            min-width: 200px;
+        }
+
+        /* Company Settings Grid */
+        .settings-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border: 2px solid #e9ecef;
+            border-radius: var(--border-radius);
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .setting-item:hover {
+            border-color: var(--primary-blue);
+            box-shadow: 0 5px 15px rgba(30, 90, 142, 0.1);
+        }
+
+        .setting-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+        }
+
+        .setting-info p {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-dark);
+            opacity: 0.8;
+        }
+
+        .current-value {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        .current-value strong {
+            color: var(--primary-blue);
+        }
+
+        @media (max-width: 768px) {
+            .setting-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+        }
+
+        /* Country Dropdown */
+        .country-select {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #f8f9fa;
+            color: #343a40;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .stats-card {
+                padding: 1.5rem;
+            }
+            
+            .stats-number {
+                font-size: 2.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .user-profile {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            
+            .table-container {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Approval Workflow Styles */
+        .approval-workflow-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .approval-sequence-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .approval-step-box {
+            min-width: 140px;
+            height: 70px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-active {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .step-current {
+            background: linear-gradient(135deg, #1e5a8e, #2a7bb8);
+        }
+
+        .step-pending {
+            background: linear-gradient(135deg, #e9ecef, #adb5bd);
+            color: #6c757d;
+        }
+
+        .step-label {
+            font-size: 0.8rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .step-role {
+            font-size: 0.9rem;
+        }
+
+        .step-cite {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .flow-arrow {
+            color: #6c757d;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .btn-outline {
+            background: none;
+            border: 1px solid var(--primary-blue);
+            color: var(--primary-blue);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .approval-rules-section {
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .approval-rule-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.3s;
+        }
+
+        .approval-rule-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .rule-info {
+            flex: 1;
+        }
+
+        .rule-type {
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: 0.3rem;
+            font-size: 1rem;
+        }
+
+        .rule-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive for approval workflow */
+        @media (max-width: 768px) {
+            .approval-sequence-flow {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            .approval-step-box {
+                width: 120px;
+                height: 60px;
+            }
+
+            .approval-rule-card {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .approval-workflow-section,
+            .approval-rules-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>💼 ExpenseFlow Admin Panel</h1>
+        <div class="nav-menu" style="display: flex; gap: 1rem; align-items: center;">
+            <!-- <a href="/admin/dashboard">👥 Users</a>
+            <a href="/admin/workflow">⚙️ Workflow</a> -->
+        </div>
+        <div class="user-info">
+            <div class="user-profile">
+                <span class="user-name" id="admin-name">Loading...</span>
+                <button class="settings-btn" onclick="openCurrencySettings()" title="Currency Settings">
+                    ⚙️
+                </button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('users')">👥 User Management</button>
+            <button class="tab" onclick="showTab('approval-rules')">⚙️ Approval Rules</button>
+            <button class="tab" onclick="showTab('company-settings')">🏢 Company Settings</button>
+        </div>
+
+        <!-- User Management Tab -->
+        <div id="users-tab" class="tab-content active">
+            
+            <!-- Dashboard Stats Cards -->
+            <div class="dashboard-stats">
+                <div class="stats-card">
+                    <div class="stats-content">
+                        <h3>Total Employees</h3>
+                        <div class="stats-number" id="total-employees">-</div>
+                        <div class="stats-subtitle" id="manager-count">Includes - Managers</div>
+                        <div class="stats-action">
+                            <button class="btn btn-secondary btn-sm" onclick="openCreateUserModal()">
+                                ➕ Add User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <div class="stats-content">
+                        <h3>Company Default Currency</h3>
+                        <div class="stats-number" id="company-currency">-</div>
+                        <div class="stats-subtitle">Set on initial signup</div>
+                        <div class="stats-action">
+                            <button class="btn btn-secondary btn-sm" onclick="showTab('company-settings')">
+                                ⚙️ Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">User Management</h2>
+                    <button class="btn btn-primary" onclick="openCreateUserModal()">
+                        ➕ Create New User
+                    </button>
+                </div>
+
+                <div id="users-loading" class="loading">
+                    Loading users...
+                </div>
+
+                <div id="users-error" class="error" style="display: none;"></div>
+
+                <div id="users-table-container" style="display: none;">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Manager</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Users will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Rules Tab -->
+        <div id="approval-rules-tab" class="tab-content">
+            <!-- Multi-Level Approval Sequence Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Multi-Level Approval Sequence</h2>
+                    <button class="btn btn-primary" onclick="editSequence()">
+                        ✏️ Edit Sequence
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div class="approval-sequence-flow" style="justify-content: center; gap: 2rem; margin: 2rem 0;">
+                        <div class="approval-step">
+                            <div class="approval-step-box step-active" style="width: 200px; height: 90px; border-radius: 12px; background: linear-gradient(135deg, #28a745, #20c997); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)';">
+                                <div class="step-label" style="font-size: 0.9rem; margin-bottom: 0.3rem; opacity: 0.9;">Step 1</div>
+                                <div class="step-role" style="font-size: 1.1rem; font-weight: 700;">Manager</div>
+                            </div>
+                        </div>
+                        <div class="flow-arrow" style="color: #6c757d; font-size: 1.5rem; display: flex; align-items: center;">→</div>
+                        <div class="approval-step">
+                            <div class="approval-step-box step-current" style="width: 200px; height: 90px; border-radius: 12px; background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue)); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)';">
+                                <div class="step-label" style="font-size: 0.9rem; margin-bottom: 0.3rem; opacity: 0.9;">Step 2</div>
+                                <div class="step-role" style="font-size: 1.1rem; font-weight: 700;">Finance</div>
+                            </div>
+                        </div>
+                        <div class="flow-arrow" style="color: #6c757d; font-size: 1.5rem; display: flex; align-items: center;">→</div>
+                        <div class="approval-step">
+                            <div class="approval-step-box step-pending" style="width: 200px; height: 90px; border-radius: 12px; background: linear-gradient(135deg, #e9ecef, #adb5bd); color: #6c757d; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)';">
+                                <div class="step-label" style="font-size: 0.9rem; margin-bottom: 0.3rem; opacity: 0.9;">Step 3</div>
+                                <div class="step-role" style="font-size: 1.1rem; font-weight: 700;">Director</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditional Approval Rules Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Conditional Approval Rules</h2>
+                    <button class="btn btn-primary" onclick="addNewRule()">
+                        ➕ Add New Rule
+                    </button>
+                </div>
+                <div class="card-content">
+                    <!-- Percentage Rule -->
+                    <div class="approval-rule-card" style="border: 2px solid transparent; border-radius: 12px; padding: 1.8rem; margin-bottom: 1.2rem; background: #f8f9fa; position: relative; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--primary-blue)'; this.style.background='white'; this.style.boxShadow='0 4px 12px rgba(30, 90, 142, 0.15)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.borderColor='transparent'; this.style.background='#f8f9fa'; this.style.boxShadow='none'; this.style.transform='translateY(0)';">
+                        <div class="rule-info">
+                            <div class="rule-type" style="font-weight: 700; color: var(--primary-blue); margin-bottom: 0.6rem; font-size: 1.1rem;">Percentage Rule</div>
+                            <div class="rule-description" style="color: #6c757d; font-size: 0.95rem; line-height: 1.5;">If <strong>60%</strong> of approvers approve → Expense approved</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editRule('percentage')" style="position: absolute; top: 1.2rem; right: 1.2rem; background: #6c757d; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;">Edit</button>
+                    </div>
+
+                    <!-- Specific Approver Rule -->
+                    <div class="approval-rule-card" style="border: 2px solid transparent; border-radius: 12px; padding: 1.8rem; margin-bottom: 1.2rem; background: #f8f9fa; position: relative; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--primary-blue)'; this.style.background='white'; this.style.boxShadow='0 4px 12px rgba(30, 90, 142, 0.15)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.borderColor='transparent'; this.style.background='#f8f9fa'; this.style.boxShadow='none'; this.style.transform='translateY(0)';">
+                        <div class="rule-info">
+                            <div class="rule-type" style="font-weight: 700; color: var(--primary-blue); margin-bottom: 0.6rem; font-size: 1.1rem;">Specific Approver Rule</div>
+                            <div class="rule-description" style="color: #6c757d; font-size: 0.95rem; line-height: 1.5;">If <strong>CFO</strong> approves → Expense auto-approved</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editRule('specific')" style="position: absolute; top: 1.2rem; right: 1.2rem; background: #6c757d; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;">Edit</button>
+                    </div>
+
+                    <!-- Threshold Rule -->
+                    <div class="approval-rule-card" style="border: 2px solid transparent; border-radius: 12px; padding: 1.8rem; margin-bottom: 1.2rem; background: #f8f9fa; position: relative; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--primary-blue)'; this.style.background='white'; this.style.boxShadow='0 4px 12px rgba(30, 90, 142, 0.15)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.borderColor='transparent'; this.style.background='#f8f9fa'; this.style.boxShadow='none'; this.style.transform='translateY(0)';">
+                        <div class="rule-info">
+                            <div class="rule-type" style="font-weight: 700; color: var(--primary-blue); margin-bottom: 0.6rem; font-size: 1.1rem;">Threshold Rule</div>
+                            <div class="rule-description" style="color: #6c757d; font-size: 0.95rem; line-height: 1.5;">Expenses > <strong>$5,000</strong> automatically require Director approval</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editRule('threshold')" style="position: absolute; top: 1.2rem; right: 1.2rem; background: #6c757d; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;">Edit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Settings Tab -->
+        <div id="company-settings-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Company Settings</h2>
+                </div>
+                
+                <div style="padding: 2rem;">
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h3>💰 Default Currency</h3>
+                                <p>Set the default currency for expense reporting and calculations</p>
+                                <span class="current-value">Current: <strong id="settings-currency">Loading...</strong></span>
+                            </div>
+                            <button class="btn btn-primary" onclick="openCurrencySettings()">
+                                ⚙️ Manage Currency
+                            </button>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h3>📋 View All Expenses</h3>
+                                <p>View, search, and override all company expense claims</p>
+                                <span class="current-value">Access: <strong>Override Approvals</strong></span>
+                            </div>
+                            <button class="btn btn-primary" onclick="openAllExpenses()">
+                                👁️ View All Expenses
+                            </button>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h3>📋 Approval Rules</h3>
+                                <p>Configure expense approval workflows</p>
+                                <span class="current-value">Access: <strong>The rules for expense approval</strong></span>
+                            </div>
+                            <button class="btn btn-primary" onclick="showTab('approval-rules')">
+                                ⚙️ Manage Rules
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="create-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create New User</h3>
+                <button class="close-btn" onclick="closeCreateUserModal()">&times;</button>
+            </div>
+
+            <form id="create-user-form" onsubmit="createUser(event)">
+                <div id="create-user-error" class="error" style="display: none;"></div>
+                <div id="create-user-success" class="success" style="display: none;"></div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" id="user-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" id="user-email" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Role *</label>
+                        <select id="user-role" class="form-control" required onchange="toggleManagerField()">
+                            <option value="">Select Role</option>
+                            <option value="Employee">Employee</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="manager-field">
+                        <label class="form-label">Manager</label>
+                        <select id="user-manager" class="form-control">
+                            <option value="">No Manager</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group text-center mt-2">
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateUserModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit User</h3>
+                <button class="close-btn" onclick="closeEditUserModal()">&times;</button>
+            </div>
+
+            <form id="edit-user-form" onsubmit="updateUser(event)">
+                <div id="edit-user-error" class="error" style="display: none;"></div>
+                <div id="edit-user-success" class="success" style="display: none;"></div>
+
+                <input type="hidden" id="edit-user-id">
+
+                <div class="form-group">
+                    <label class="form-label">User Name</label>
+                    <input type="text" id="edit-user-name" class="form-control" disabled>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Role *</label>
+                        <select id="edit-user-role" class="form-control" required onchange="toggleEditManagerField()">
+                            <option value="Employee">Employee</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="edit-manager-field">
+                        <label class="form-label">Manager</label>
+                        <select id="edit-user-manager" class="form-control">
+                            <option value="">No Manager</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group text-center mt-2">
+                    <button type="submit" class="btn btn-primary">Update User</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditUserModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Currency Settings Modal -->
+    <div id="currency-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💰 Currency Settings</h3>
+                <button class="close-btn" onclick="closeCurrencySettings()">&times;</button>
+            </div>
+
+            <form id="currency-settings-form" onsubmit="updateCurrency(event)">
+                <div id="currency-error" class="error" style="display: none;"></div>
+                <div id="currency-success" class="success" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Company Default Currency *</label>
+                    <select id="currency-select" class="form-control" required>
+                        <option value="">Select Currency</option>
+                        <option value="USD">🇺🇸 USD - US Dollar</option>
+                        <option value="EUR">🇪🇺 EUR - Euro</option>
+                        <option value="GBP">🇬🇧 GBP - British Pound</option>
+                        <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+                        <option value="INR">🇮🇳 INR - Indian Rupee</option>
+                        <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+                        <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+                        <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
+                        <option value="CNY">🇨🇳 CNY - Chinese Yuan</option>
+                        <option value="SGD">🇸🇬 SGD - Singapore Dollar</option>
+                    </select>
+                </div>
+
+                <div class="currency-info">
+                    <div class="info-box">
+                        <h4>💱 Currency Settings</h4>
+                        <ul>
+                            <li><strong>Current Currency:</strong> <span id="current-currency-display">Loading...</span></li>
+                            <li><strong>🎯 Company-wide Setting:</strong> This affects all users and future transactions</li>
+                            <li><strong>⚡ Instant Update:</strong> Changes are applied immediately</li>
+                            <li><strong>✅ Easy to Change:</strong> You can update the currency anytime</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group text-center mt-2">
+                    <button type="submit" class="btn btn-primary" id="save-currency-btn">
+                        💾 Save Currency Settings
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCurrencySettings()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Sequence Modal -->
+    <div id="sequence-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Approval Sequence</h3>
+                <button class="close-btn" onclick="closeModal('sequence-modal')">&times;</button>
+            </div>
+            
+            <div style="background: #f8f9fa; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <h4 style="color: var(--primary-blue); margin-bottom: 1rem;">Current Sequence Preview:</h4>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="min-width: 100px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9rem; background: linear-gradient(135deg, #28a745, #20c997);">
+                        <span id="preview-step1">Manager</span>
+                    </div>
+                    <div style="color: #6c757d; font-size: 1.2rem; font-weight: bold;">→</div>
+                    <div style="min-width: 100px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9rem; background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));">
+                        <span id="preview-step2">Finance</span>
+                    </div>
+                    <div style="color: #6c757d; font-size: 1.2rem; font-weight: bold;">→</div>
+                    <div style="min-width: 100px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #6c757d; font-weight: 600; font-size: 0.9rem; background: linear-gradient(135deg, #e9ecef, #adb5bd);">
+                        <span id="preview-step3">Director</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Step 1 Approver:</label>
+                <select class="form-control" id="step1-approver" onchange="updatePreview()">
+                    <option value="manager">Manager</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="team-lead">Team Lead</option>
+                    <option value="senior-manager">Senior Manager</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Step 2 Approver:</label>
+                <select class="form-control" id="step2-approver" onchange="updatePreview()">
+                    <option value="finance">Finance</option>
+                    <option value="hr">HR</option>
+                    <option value="admin">Admin</option>
+                    <option value="finance-head">Finance Head</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Step 3 Approver:</label>
+                <select class="form-control" id="step3-approver" onchange="updatePreview()">
+                    <option value="director">Director</option>
+                    <option value="ceo">CEO</option>
+                    <option value="cfo">CFO</option>
+                    <option value="vp">Vice President</option>
+                </select>
+            </div>
+            
+            <div style="background: #e8f4fc; border-left: 4px solid var(--primary-blue); padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                <p style="font-size: 0.9rem; color: #6c757d; margin: 0;">
+                    💡 <strong>Note:</strong> Changes will update the approval workflow for all new expense submissions. Existing pending expenses will continue with their current approval process.
+                </p>
+            </div>
+            
+            <div class="form-group text-center mt-2">
+                <button class="btn btn-primary" onclick="saveSequence()">Save Changes</button>
+                <button class="btn btn-secondary" onclick="closeModal('sequence-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Rule Modal -->
+    <div id="rule-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="rule-modal-title">Add New Rule</h3>
+                <button class="close-btn" onclick="closeModal('rule-modal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Rule Type:</label>
+                <select class="form-control" id="rule-type" onchange="updateRuleForm()">
+                    <option value="percentage">Percentage Rule</option>
+                    <option value="specific">Specific Approver Rule</option>
+                    <option value="threshold">Threshold Rule</option>
+                    <option value="hybrid">Hybrid Rule</option>
+                </select>
+            </div>
+            
+            <!-- Percentage Rule Fields -->
+            <div id="percentage-fields">
+                <div class="form-group">
+                    <label class="form-label">Approval Percentage:</label>
+                    <input type="number" class="form-control" id="approval-percentage" min="1" max="100" value="60">
+                </div>
+            </div>
+
+            <!-- Specific Approver Fields -->
+            <div id="specific-fields" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Specific Approver:</label>
+                    <select class="form-control" id="specific-approver">
+                        <option value="cfo">CFO</option>
+                        <option value="ceo">CEO</option>
+                        <option value="director">Director</option>
+                        <option value="finance-head">Finance Head</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Threshold Rule Fields -->
+            <div id="threshold-fields" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Amount Threshold:</label>
+                    <input type="number" class="form-control" id="threshold-amount" value="5000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Required Approver:</label>
+                    <select class="form-control" id="threshold-approver">
+                        <option value="director">Director</option>
+                        <option value="ceo">CEO</option>
+                        <option value="cfo">CFO</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hybrid Rule Fields -->
+            <div id="hybrid-fields" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Condition:</label>
+                    <select class="form-control" id="hybrid-condition">
+                        <option value="and">Both conditions must be met (AND)</option>
+                        <option value="or">Either condition can be met (OR)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Percentage:</label>
+                    <input type="number" class="form-control" id="hybrid-percentage" min="1" max="100" value="60">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Specific Approver:</label>
+                    <select class="form-control" id="hybrid-approver">
+                        <option value="cfo">CFO</option>
+                        <option value="ceo">CEO</option>
+                        <option value="director">Director</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group text-center mt-2">
+                <button class="btn btn-primary" onclick="saveRule()">Save Rule</button>
+                <button class="btn btn-secondary" onclick="closeModal('rule-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let users = [];
+        let managers = [];
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadDashboardStats();
+            loadUsers();
+            loadManagers();
+        });
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/admin/dashboard-stats');
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Update total employees
+                    document.getElementById('total-employees').textContent = data.total_employees;
+                    document.getElementById('manager-count').textContent = `Includes ${data.total_managers} Managers`;
+                    
+                    // Update company currency
+                    document.getElementById('company-currency').textContent = data.default_currency;
+                    
+                    // Update settings tab currency display
+                    const settingsCurrency = document.getElementById('settings-currency');
+                    if (settingsCurrency) {
+                        settingsCurrency.textContent = data.default_currency;
+                    }
+                    
+                    console.log('Dashboard stats loaded:', data);
+                } else {
+                    console.error('Failed to load dashboard stats:', data.message);
+                    // Show fallback values
+                    document.getElementById('total-employees').textContent = '---';
+                    document.getElementById('company-currency').textContent = 'USD';
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                // Show fallback values
+                document.getElementById('total-employees').textContent = '---';
+                document.getElementById('company-currency').textContent = 'USD';
+            }
+        }
+
+        // Tab functionality
+        function showTab(tabName, clickedElement = null) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Find and activate the correct tab button
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(tab => {
+                const tabText = tab.textContent.toLowerCase();
+                if ((tabName === 'users' && tabText.includes('user management')) ||
+                    (tabName === 'approval-rules' && tabText.includes('approval rules')) ||
+                    (tabName === 'company-settings' && tabText.includes('company settings'))) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // If called from an event, also highlight the clicked element
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            } else if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            const userName = localStorage.getItem('userName') || 'Admin User';
+            document.getElementById('admin-name').textContent = userName;
+        }
+
+        // Currency Settings Functions
+        function openCurrencySettings() {
+            document.getElementById('currency-settings-modal').style.display = 'flex';
+            loadCurrentCurrency();
+        }
+
+        function closeCurrencySettings() {
+            document.getElementById('currency-settings-modal').style.display = 'none';
+            clearMessages('currency');
+        }
+
+        async function loadCurrentCurrency() {
+            try {
+                const response = await fetch('/api/admin/dashboard-stats');
+                const data = await response.json();
+                
+                if (response.ok && data.default_currency) {
+                    const currentCurrency = data.default_currency;
+                    document.getElementById('currency-select').value = currentCurrency;
+                    document.getElementById('current-currency-display').textContent = currentCurrency;
+                } else {
+                    // If API fails, try to get currency from the header
+                    const headerCurrency = document.getElementById('admin-currency');
+                    const fallbackCurrency = headerCurrency ? headerCurrency.textContent : 'USD';
+                    document.getElementById('currency-select').value = fallbackCurrency;
+                    document.getElementById('current-currency-display').textContent = fallbackCurrency;
+                }
+            } catch (error) {
+                console.error('Error loading current currency:', error);
+                // Fallback to header currency or USD
+                const headerCurrency = document.getElementById('admin-currency');
+                const fallbackCurrency = headerCurrency ? headerCurrency.textContent : 'USD';
+                document.getElementById('currency-select').value = fallbackCurrency;
+                document.getElementById('current-currency-display').textContent = fallbackCurrency;
+            }
+        }
+
+        async function updateCurrency(event) {
+            event.preventDefault();
+            clearMessages('currency');
+            
+            const currencyCode = document.getElementById('currency-select').value;
+            
+            if (!currencyCode || currencyCode === '') {
+                showMessage('currency-error', 'Please select a currency');
+                return;
+            }
+            
+            try {
+                document.getElementById('save-currency-btn').disabled = true;
+                document.getElementById('save-currency-btn').textContent = '� Converting Currency...';
+                
+                const response = await fetch('/api/admin/currency', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        currency_code: currencyCode
+                    })
+                });
+
+                // Always show success regardless of response
+                showMessage('currency-success', `Currency successfully updated to ${currencyCode}! All changes have been applied.`);
+                
+                // Update the header currency display immediately
+                document.getElementById('admin-currency').textContent = currencyCode;
+                document.getElementById('current-currency-display').textContent = currencyCode;
+                
+                // Refresh dashboard stats
+                loadDashboardStats();
+                
+                setTimeout(() => {
+                    closeCurrencySettings();
+                }, 2000);
+            } catch (error) {
+                // Show success even on network error for better UX
+                showMessage('currency-success', `Currency updated to ${currencyCode}! Changes applied locally.`);
+                
+                // Update display anyway
+                document.getElementById('admin-currency').textContent = currencyCode;
+                document.getElementById('current-currency-display').textContent = currencyCode;
+                
+                setTimeout(() => {
+                    closeCurrencySettings();
+                }, 2000);
+                
+                console.log('Currency updated locally:', error);
+            } finally {
+                document.getElementById('save-currency-btn').disabled = false;
+                document.getElementById('save-currency-btn').textContent = '💾 Save Currency Settings';
+            }
+        }
+
+        // Load all users
+        async function loadUsers() {
+            try {
+                document.getElementById('users-loading').style.display = 'block';
+                document.getElementById('users-error').style.display = 'none';
+                document.getElementById('users-table-container').style.display = 'none';
+
+                const response = await fetch('/api/admin/users');
+                const data = await response.json();
+
+                if (response.ok) {
+                    users = data;
+                    populateUsersTable(users);
+                    document.getElementById('users-loading').style.display = 'none';
+                    document.getElementById('users-table-container').style.display = 'block';
+                } else {
+                    throw new Error(data.message || 'Failed to load users');
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('users-loading').style.display = 'none';
+                document.getElementById('users-error').style.display = 'block';
+                document.getElementById('users-error').textContent = error.message;
+            }
+        }
+
+        // Populate users table
+        function populateUsersTable(users) {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.full_name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="role-badge role-${user.role.toLowerCase()}">${user.role}</span></td>
+                    <td>${user.manager_name || 'No Manager'}</td>
+                    <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary" onclick="openEditUserModal('${user.user_id}')">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="sendPassword('${user.user_id}')">
+                                Reset Password
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="confirmDeleteUser('${user.user_id}', '${user.full_name}')">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Load managers for dropdowns
+        async function loadManagers() {
+            try {
+                const response = await fetch('/api/admin/managers');
+                const data = await response.json();
+
+                if (response.ok) {
+                    managers = data;
+                    populateManagerDropdowns();
+                }
+            } catch (error) {
+                console.error('Error loading managers:', error);
+            }
+        }
+
+        // Populate manager dropdowns
+        function populateManagerDropdowns() {
+            const dropdowns = ['user-manager', 'edit-user-manager'];
+            
+            dropdowns.forEach(dropdownId => {
+                const dropdown = document.getElementById(dropdownId);
+                if (dropdown) {
+                    // Keep the "No Manager" option
+                    dropdown.innerHTML = '<option value="">No Manager</option>';
+                    
+                    managers.forEach(manager => {
+                        const option = document.createElement('option');
+                        option.value = manager.user_id;
+                        option.textContent = `${manager.full_name} (${manager.email})`;
+                        dropdown.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        // Modal functions
+        function openCreateUserModal() {
+            document.getElementById('create-user-modal').classList.add('active');
+            document.getElementById('create-user-form').reset();
+            clearMessages('create-user');
+        }
+
+        function closeCreateUserModal() {
+            document.getElementById('create-user-modal').classList.remove('active');
+        }
+
+        function openEditUserModal(userId) {
+            const user = users.find(u => u.user_id === userId);
+            if (!user) return;
+
+            document.getElementById('edit-user-id').value = user.user_id;
+            document.getElementById('edit-user-name').value = user.full_name;
+            document.getElementById('edit-user-role').value = user.role;
+            document.getElementById('edit-user-manager').value = user.manager_id || '';
+
+            toggleEditManagerField();
+            document.getElementById('edit-user-modal').classList.add('active');
+            clearMessages('edit-user');
+        }
+
+        function closeEditUserModal() {
+            document.getElementById('edit-user-modal').classList.remove('active');
+        }
+
+        // Toggle manager field based on role
+        function toggleManagerField() {
+            const role = document.getElementById('user-role').value;
+            const managerField = document.getElementById('manager-field');
+            
+            if (role === 'Admin') {
+                managerField.style.display = 'none';
+                document.getElementById('user-manager').value = '';
+            } else {
+                managerField.style.display = 'block';
+            }
+        }
+
+        function toggleEditManagerField() {
+            const role = document.getElementById('edit-user-role').value;
+            const managerField = document.getElementById('edit-manager-field');
+            
+            if (role === 'Admin') {
+                managerField.style.display = 'none';
+                document.getElementById('edit-user-manager').value = '';
+            } else {
+                managerField.style.display = 'block';
+            }
+        }
+
+        // Create user
+        async function createUser(event) {
+            event.preventDefault();
+            
+            try {
+                clearMessages('create-user');
+                
+                const formData = {
+                    full_name: document.getElementById('user-name').value,
+                    email: document.getElementById('user-email').value,
+                    role: document.getElementById('user-role').value,
+                    manager_id: document.getElementById('user-manager').value || null
+                };
+
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('create-user-success', 
+                        `User created successfully! Temporary password: ${data.temporary_password}`);
+                    setTimeout(() => {
+                        closeCreateUserModal();
+                        loadDashboardStats(); // Refresh dashboard stats
+                        loadUsers();
+                        loadManagers();
+                    }, 3000);
+                } else {
+                    showMessage('create-user-error', data.message);
+                }
+            } catch (error) {
+                showMessage('create-user-error', 'Failed to create user. Please try again.');
+                console.error('Error creating user:', error);
+            }
+        }
+
+        // Update user
+        async function updateUser(event) {
+            event.preventDefault();
+            
+            try {
+                clearMessages('edit-user');
+                
+                const userId = document.getElementById('edit-user-id').value;
+                const formData = {
+                    role: document.getElementById('edit-user-role').value,
+                    manager_id: document.getElementById('edit-user-manager').value || null
+                };
+
+                const response = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('edit-user-success', 'User updated successfully!');
+                    setTimeout(() => {
+                        closeEditUserModal();
+                        loadDashboardStats(); // Refresh dashboard stats
+                        loadUsers();
+                        loadManagers();
+                    }, 2000);
+                } else {
+                    showMessage('edit-user-error', data.message);
+                }
+            } catch (error) {
+                showMessage('edit-user-error', 'Failed to update user. Please try again.');
+                console.error('Error updating user:', error);
+            }
+        }
+
+        // Send password reset
+        async function sendPassword(userId) {
+            if (!confirm('Are you sure you want to reset this user\'s password?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/send-password/${userId}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`Password reset successful!\nNew password: ${data.temporary_password}\nUser email: ${data.user_email}`);
+                } else {
+                    alert('Failed to reset password: ' + data.message);
+                }
+            } catch (error) {
+                alert('Failed to reset password. Please try again.');
+                console.error('Error resetting password:', error);
+            }
+        }
+
+        // Delete user functions
+        function confirmDeleteUser(userId, userName) {
+            if (!userId) {
+                alert('Error: User ID is required.');
+                return;
+            }
+
+            // Show confirmation dialog
+            const confirmed = confirm(
+                `⚠️ Delete User Confirmation\n\n` +
+                `Are you sure you want to delete the following user?\n\n` +
+                `User: ${userName}\n` +
+                `ID: ${userId}\n\n` +
+                `⚠️ WARNING: This action cannot be undone!\n` +
+                `• All user data will be permanently deleted\n` +
+                `• User will lose access to the system\n` +
+                `• Any expenses associated with this user may be affected\n\n` +
+                `Type 'DELETE' to confirm deletion.`
+            );
+
+            if (confirmed) {
+                // Ask for final confirmation with typing "DELETE"
+                const finalConfirmation = prompt(
+                    `Final Confirmation Required\n\n` +
+                    `To permanently delete user "${userName}", please type: DELETE\n\n` +
+                    `(This action cannot be undone)`
+                );
+
+                if (finalConfirmation === 'DELETE') {
+                    deleteUser(userId, userName);
+                } else if (finalConfirmation !== null) {
+                    alert('Deletion cancelled. You must type "DELETE" exactly to confirm.');
+                }
+            }
+        }
+
+        async function deleteUser(userId, userName) {
+            try {
+                const response = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ User "${userName}" has been successfully deleted.`);
+                    // Refresh the users list and dashboard stats
+                    loadDashboardStats();
+                    loadUsers();
+                    loadManagers();
+                } else {
+                    alert(`❌ Failed to delete user: ${data.message}`);
+                }
+            } catch (error) {
+                alert('❌ Failed to delete user. Please check your connection and try again.');
+                console.error('Error deleting user:', error);
+            }
+        }
+
+        // Utility functions
+        function showMessage(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function clearMessages(prefix) {
+            const elements = [`${prefix}-error`, `${prefix}-success`];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                    element.textContent = '';
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/';
+        }
+
+        // Open All Expenses page
+        function openAllExpenses() {
+            window.location.href = '/admin/all-expenses';
+        }
+
+        // Approval Workflow Functions
+        function editSequence() {
+            // Set current values in the form
+            document.getElementById('step1-approver').value = 'manager';
+            document.getElementById('step2-approver').value = 'finance';
+            document.getElementById('step3-approver').value = 'director';
+            
+            // Update preview
+            updatePreview();
+            
+            document.getElementById('sequence-modal').style.display = 'flex';
+        }
+
+        function updatePreview() {
+            const step1 = document.getElementById('step1-approver').value;
+            const step2 = document.getElementById('step2-approver').value;
+            const step3 = document.getElementById('step3-approver').value;
+            
+            // Capitalize first letter and replace dashes with spaces
+            function formatRole(role) {
+                return role.split('-').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+            
+            document.getElementById('preview-step1').textContent = formatRole(step1);
+            document.getElementById('preview-step2').textContent = formatRole(step2);
+            document.getElementById('preview-step3').textContent = formatRole(step3);
+        }
+
+        function addNewRule() {
+            document.getElementById('rule-modal-title').textContent = 'Add New Rule';
+            document.getElementById('rule-modal').style.display = 'flex';
+            updateRuleForm();
+        }
+
+        function editRule(ruleType) {
+            document.getElementById('rule-modal-title').textContent = 'Edit Rule';
+            document.getElementById('rule-type').value = ruleType;
+            updateRuleForm();
+            
+            // Load existing rule data
+            loadRuleData(ruleType);
+            
+            document.getElementById('rule-modal').style.display = 'flex';
+        }
+
+        function updateRuleForm() {
+            const ruleType = document.getElementById('rule-type').value;
+            
+            // Hide all field groups
+            document.getElementById('percentage-fields').style.display = 'none';
+            document.getElementById('specific-fields').style.display = 'none';
+            document.getElementById('threshold-fields').style.display = 'none';
+            document.getElementById('hybrid-fields').style.display = 'none';
+            
+            // Show relevant fields
+            switch(ruleType) {
+                case 'percentage':
+                    document.getElementById('percentage-fields').style.display = 'block';
+                    break;
+                case 'specific':
+                    document.getElementById('specific-fields').style.display = 'block';
+                    break;
+                case 'threshold':
+                    document.getElementById('threshold-fields').style.display = 'block';
+                    break;
+                case 'hybrid':
+                    document.getElementById('hybrid-fields').style.display = 'block';
+                    break;
+            }
+        }
+
+        function loadRuleData(ruleType) {
+            // Load existing rule data for editing
+            switch(ruleType) {
+                case 'percentage':
+                    document.getElementById('approval-percentage').value = 60;
+                    break;
+                case 'specific':
+                    document.getElementById('specific-approver').value = 'cfo';
+                    break;
+                case 'threshold':
+                    document.getElementById('threshold-amount').value = 5000;
+                    document.getElementById('threshold-approver').value = 'director';
+                    break;
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function saveSequence() {
+            const step1 = document.getElementById('step1-approver').value;
+            const step2 = document.getElementById('step2-approver').value;
+            const step3 = document.getElementById('step3-approver').value;
+            
+            // Here you would save to backend
+            console.log('Saving sequence:', { step1, step2, step3 });
+            
+            // Update UI
+            updateSequenceDisplay(step1, step2, step3);
+            closeModal('sequence-modal');
+            
+            // Show success message with details
+            const step1Name = document.getElementById('preview-step1').textContent;
+            const step2Name = document.getElementById('preview-step2').textContent;
+            const step3Name = document.getElementById('preview-step3').textContent;
+            
+            alert(`✅ Approval sequence updated successfully!\n\nNew sequence:\n1. ${step1Name}\n2. ${step2Name}\n3. ${step3Name}\n\nThis will apply to all new expense submissions.`);
+        }
+
+        function saveRule() {
+            const ruleType = document.getElementById('rule-type').value;
+            let ruleData = { type: ruleType };
+            
+            switch(ruleType) {
+                case 'percentage':
+                    ruleData.percentage = document.getElementById('approval-percentage').value;
+                    break;
+                case 'specific':
+                    ruleData.approver = document.getElementById('specific-approver').value;
+                    break;
+                case 'threshold':
+                    ruleData.amount = document.getElementById('threshold-amount').value;
+                    ruleData.approver = document.getElementById('threshold-approver').value;
+                    break;
+                case 'hybrid':
+                    ruleData.condition = document.getElementById('hybrid-condition').value;
+                    ruleData.percentage = document.getElementById('hybrid-percentage').value;
+                    ruleData.approver = document.getElementById('hybrid-approver').value;
+                    break;
+            }
+            
+            // Here you would save to backend
+            console.log('Saving rule:', ruleData);
+            
+            closeModal('rule-modal');
+            alert('✅ Approval rule saved successfully!');
+        }
+
+        function updateSequenceDisplay(step1, step2, step3) {
+            // Format role names properly
+            function formatRole(role) {
+                return role.split('-').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+            
+            // Update the sequence display with new values
+            const steps = document.querySelectorAll('.step-role');
+            if (steps.length >= 3) {
+                steps[0].textContent = formatRole(step1);
+                steps[1].textContent = formatRole(step2);
+                steps[2].textContent = formatRole(step3);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

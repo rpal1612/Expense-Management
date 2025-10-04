@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Approval Workflow Configuration - ExpenseFlow</title>
+    <!-- Updated: 2025-10-04 15:50:30 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo::before {
+            content: "💰";
+            margin-right: 0.5rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #357abd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4a90e2;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        /* Approval Sequence */
+        .approval-sequence {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .approval-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .step-box {
+            width: 220px;
+            height: 100px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .step-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        .step-1 .step-box {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .step-2 .step-box {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+        }
+
+        .step-3 .step-box {
+            background: linear-gradient(135deg, #e9ecef, #adb5bd);
+            color: #6c757d;
+        }
+
+        .step-number {
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            opacity: 0.9;
+        }
+
+        .step-role {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .step-reference {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 0.2rem;
+        }
+
+        .arrow {
+            color: #6c757d;
+            font-size: 1.5rem;
+            margin: 0 1rem;
+        }
+
+        .edit-sequence-btn {
+            background: none;
+            border: 1px solid #4a90e2;
+            color: #4a90e2;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            transition: all 0.3s;
+        }
+
+        .edit-sequence-btn:hover {
+            background: #4a90e2;
+            color: white;
+        }
+
+        /* Conditional Rules */
+        .add-rule-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .add-rule-btn:hover {
+            background: #357abd;
+        }
+
+        .add-rule-btn::before {
+            content: "+ ";
+            font-weight: 600;
+        }
+
+        .rule-item {
+            background: #f8f9fa;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 1.8rem;
+            margin-bottom: 1.2rem;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .rule-item:hover {
+            border-color: #4a90e2;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .rule-type {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.6rem;
+            font-size: 1.1rem;
+        }
+
+        .rule-description {
+            color: #6c757d;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .rule-reference {
+            font-size: 0.8rem;
+            color: #adb5bd;
+        }
+
+        .edit-btn {
+            position: absolute;
+            top: 1.2rem;
+            right: 1.2rem;
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn:hover {
+            background: #4a90e2;
+            transform: scale(1.05);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-menu {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .approval-sequence {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+                margin: 0.5rem 0;
+            }
+
+            .step-box {
+                width: 160px;
+                height: 80px;
+            }
+
+            .card-content {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .step-box {
+                width: 140px;
+                height: 70px;
+            }
+
+            .step-role {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .sequence-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-sequence-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .modal-step-box {
+            min-width: 100px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .step-1-color {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .step-2-color {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+        }
+
+        .step-3-color {
+            background: linear-gradient(135deg, #e9ecef, #adb5bd);
+            color: #6c757d;
+        }
+
+        .modal-arrow {
+            color: #6c757d;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .sequence-note {
+            background: #e8f4fc;
+            border-left: 4px solid #4a90e2;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .close {
+            color: #adb5bd;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #357abd;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            margin-left: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">ExpenseFlow</div>
+        <nav class="nav-menu">
+            <a href="/admin/dashboard" class="nav-item">Users</a>
+            <a href="/admin/workflow" class="nav-item">Workflow</a>
+            <a href="#" class="nav-item">All Expenses</a>
+        </nav>
+        <div class="user-profile">
+            <div class="user-avatar">JD</div>
+            <span id="admin-name">John Doe (Admin)</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Approval Workflow Configuration</h1>
+            <p class="page-subtitle">Define multi-level and conditional approval flows </p>
+        </div>
+
+        <!-- Multi-Level Approval Sequence -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Multi-Level Approval Sequence</h2>
+            </div>
+            <div class="card-content">
+                <div class="approval-sequence">
+                    <div class="approval-step step-1">
+                        <div class="step-box">
+                            <div class="step-number">Step 1</div>
+                            <div class="step-role">Manager</div>
+                        </div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="approval-step step-2">
+                        <div class="step-box">
+                            <div class="step-number">Step 2</div>
+                            <div class="step-role">Finance</div>
+                        </div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="approval-step step-3">
+                        <div class="step-box">
+                            <div class="step-number">Step 3</div>
+                            <div class="step-role">Director</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <button class="edit-sequence-btn" onclick="editSequence()">Edit Sequence</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conditional Approval Rules -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Conditional Approval Rules </h2>
+            </div>
+            <div class="card-content">
+                <button class="add-rule-btn" onclick="addNewRule()">Add New Rule</button>
+
+                <!-- Percentage Rule -->
+                <div class="rule-item">
+                    <div class="rule-type">Percentage Rule</div>
+                    <div class="rule-description">If <strong>60%</strong> of approvers approve → Expense approved</div>
+                    <button class="edit-btn" onclick="editRule('percentage')">Edit</button>
+                </div>
+
+                <!-- Specific Approver Rule -->
+                <div class="rule-item">
+                    <div class="rule-type">Specific Approver Rule</div>
+                    <div class="rule-description">If <strong>CFO</strong> approves → Expense auto-approved</div>
+                    <button class="edit-btn" onclick="editRule('specific')">Edit</button>
+                </div>
+
+                <!-- Threshold Rule -->
+                <div class="rule-item">
+                    <div class="rule-type">Threshold Rule</div>
+                    <div class="rule-description">Expenses > <strong>$5,000</strong> automatically require Director approval</div>
+                    <button class="edit-btn" onclick="editRule('threshold')">Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Sequence Modal -->
+    <div id="sequence-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Approval Sequence</h3>
+                <span class="close" onclick="closeModal('sequence-modal')">&times;</span>
+            </div>
+            
+            <div class="sequence-preview">
+                <h4 style="color: #4a90e2; margin-bottom: 1rem;">Current Sequence Preview:</h4>
+                <div class="modal-sequence-display">
+                    <div class="modal-step-box step-1-color">
+                        <span id="preview-step1">Manager</span>
+                    </div>
+                    <div class="modal-arrow">→</div>
+                    <div class="modal-step-box step-2-color">
+                        <span id="preview-step2">Finance</span>
+                    </div>
+                    <div class="modal-arrow">→</div>
+                    <div class="modal-step-box step-3-color">
+                        <span id="preview-step3">Director</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Step 1 Approver:</label>
+                <select class="form-control" id="step1-approver" onchange="updatePreview()">
+                    <option value="manager">Manager</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="team-lead">Team Lead</option>
+                    <option value="senior-manager">Senior Manager</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Step 2 Approver:</label>
+                <select class="form-control" id="step2-approver" onchange="updatePreview()">
+                    <option value="finance">Finance</option>
+                    <option value="hr">HR</option>
+                    <option value="admin">Admin</option>
+                    <option value="finance-head">Finance Head</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Step 3 Approver:</label>
+                <select class="form-control" id="step3-approver" onchange="updatePreview()">
+                    <option value="director">Director</option>
+                    <option value="ceo">CEO</option>
+                    <option value="cfo">CFO</option>
+                    <option value="vp">Vice President</option>
+                </select>
+            </div>
+            
+            <div class="sequence-note">
+                <p style="font-size: 0.9rem; color: #6c757d; font-style: italic; margin: 1rem 0;">
+                    💡 <strong>Note:</strong> Changes will update the approval workflow for all new expense submissions. Existing pending expenses will continue with their current approval process.
+                </p>
+            </div>
+            
+            <div>
+                <button class="btn btn-primary" onclick="saveSequence()">Save Changes</button>
+                <button class="btn btn-secondary" onclick="closeModal('sequence-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Rule Modal -->
+    <div id="rule-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="rule-modal-title">Add New Rule</h3>
+                <span class="close" onclick="closeModal('rule-modal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Rule Type:</label>
+                <select class="form-control" id="rule-type" onchange="updateRuleForm()">
+                    <option value="percentage">Percentage Rule</option>
+                    <option value="specific">Specific Approver Rule</option>
+                    <option value="threshold">Threshold Rule</option>
+                    <option value="hybrid">Hybrid Rule</option>
+                </select>
+            </div>
+            
+            <!-- Percentage Rule Fields -->
+            <div id="percentage-fields">
+                <div class="form-group">
+                    <label class="form-label">Approval Percentage:</label>
+                    <input type="number" class="form-control" id="approval-percentage" min="1" max="100" value="60">
+                </div>
+            </div>
+
+            <!-- Specific Approver Fields -->
+            <div id="specific-fields" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Specific Approver:</label>
+                    <select class="form-control" id="specific-approver">
+                        <option value="cfo">CFO</option>
+                        <option value="ceo">CEO</option>
+                        <option value="director">Director</option>
+                        <option value="finance-head">Finance Head</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Threshold Rule Fields -->
+            <div id="threshold-fields" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Amount Threshold:</label>
+                    <input type="number" class="form-control" id="threshold-amount" value="5000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Required Approver:</label>
+                    <select class="form-control" id="threshold-approver">
+                        <option value="director">Director</option>
+                        <option value="ceo">CEO</option>
+                        <option value="cfo">CFO</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hybrid Rule Fields -->
+            <div id="hybrid-fields" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Condition:</label>
+                    <select class="form-control" id="hybrid-condition">
+                        <option value="and">Both conditions must be met (AND)</option>
+                        <option value="or">Either condition can be met (OR)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Percentage:</label>
+                    <input type="number" class="form-control" id="hybrid-percentage" min="1" max="100" value="60">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Specific Approver:</label>
+                    <select class="form-control" id="hybrid-approver">
+                        <option value="cfo">CFO</option>
+                        <option value="ceo">CEO</option>
+                        <option value="director">Director</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <button class="btn btn-primary" onclick="saveRule()">Save Rule</button>
+                <button class="btn btn-secondary" onclick="closeModal('rule-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentUser();
+            loadApprovalConfig();
+        });
+
+        function loadCurrentUser() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.full_name) {
+                document.getElementById('admin-name').textContent = `${user.full_name} (${user.role})`;
+            }
+        }
+
+        function loadApprovalConfig() {
+            // Load existing approval configuration
+            // This would typically fetch from backend
+            console.log('Loading approval configuration...');
+        }
+
+        function editSequence() {
+            // Set current values in the form
+            document.getElementById('step1-approver').value = 'manager';
+            document.getElementById('step2-approver').value = 'finance';
+            document.getElementById('step3-approver').value = 'director';
+            
+            // Update preview
+            updatePreview();
+            
+            document.getElementById('sequence-modal').style.display = 'block';
+        }
+
+        function updatePreview() {
+            const step1 = document.getElementById('step1-approver').value;
+            const step2 = document.getElementById('step2-approver').value;
+            const step3 = document.getElementById('step3-approver').value;
+            
+            // Capitalize first letter and replace dashes with spaces
+            function formatRole(role) {
+                return role.split('-').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+            
+            document.getElementById('preview-step1').textContent = formatRole(step1);
+            document.getElementById('preview-step2').textContent = formatRole(step2);
+            document.getElementById('preview-step3').textContent = formatRole(step3);
+        }
+
+        function addNewRule() {
+            document.getElementById('rule-modal-title').textContent = 'Add New Rule';
+            document.getElementById('rule-modal').style.display = 'block';
+            updateRuleForm();
+        }
+
+        function editRule(ruleType) {
+            document.getElementById('rule-modal-title').textContent = 'Edit Rule';
+            document.getElementById('rule-type').value = ruleType;
+            updateRuleForm();
+            
+            // Load existing rule data
+            loadRuleData(ruleType);
+            
+            document.getElementById('rule-modal').style.display = 'block';
+        }
+
+        function updateRuleForm() {
+            const ruleType = document.getElementById('rule-type').value;
+            
+            // Hide all field groups
+            document.getElementById('percentage-fields').style.display = 'none';
+            document.getElementById('specific-fields').style.display = 'none';
+            document.getElementById('threshold-fields').style.display = 'none';
+            document.getElementById('hybrid-fields').style.display = 'none';
+            
+            // Show relevant fields
+            switch(ruleType) {
+                case 'percentage':
+                    document.getElementById('percentage-fields').style.display = 'block';
+                    break;
+                case 'specific':
+                    document.getElementById('specific-fields').style.display = 'block';
+                    break;
+                case 'threshold':
+                    document.getElementById('threshold-fields').style.display = 'block';
+                    break;
+                case 'hybrid':
+                    document.getElementById('hybrid-fields').style.display = 'block';
+                    break;
+            }
+        }
+
+        function loadRuleData(ruleType) {
+            // Load existing rule data for editing
+            switch(ruleType) {
+                case 'percentage':
+                    document.getElementById('approval-percentage').value = 60;
+                    break;
+                case 'specific':
+                    document.getElementById('specific-approver').value = 'cfo';
+                    break;
+                case 'threshold':
+                    document.getElementById('threshold-amount').value = 5000;
+                    document.getElementById('threshold-approver').value = 'director';
+                    break;
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function saveSequence() {
+            const step1 = document.getElementById('step1-approver').value;
+            const step2 = document.getElementById('step2-approver').value;
+            const step3 = document.getElementById('step3-approver').value;
+            
+            // Here you would save to backend
+            console.log('Saving sequence:', { step1, step2, step3 });
+            
+            // Update UI
+            updateSequenceDisplay(step1, step2, step3);
+            closeModal('sequence-modal');
+            
+            // Show success message with details
+            const step1Name = document.getElementById('preview-step1').textContent;
+            const step2Name = document.getElementById('preview-step2').textContent;
+            const step3Name = document.getElementById('preview-step3').textContent;
+            
+            alert(`✅ Approval sequence updated successfully!\n\nNew sequence:\n1. ${step1Name}\n2. ${step2Name}\n3. ${step3Name}\n\nThis will apply to all new expense submissions.`);
+        }
+
+        function saveRule() {
+            const ruleType = document.getElementById('rule-type').value;
+            let ruleData = { type: ruleType };
+            
+            switch(ruleType) {
+                case 'percentage':
+                    ruleData.percentage = document.getElementById('approval-percentage').value;
+                    break;
+                case 'specific':
+                    ruleData.approver = document.getElementById('specific-approver').value;
+                    break;
+                case 'threshold':
+                    ruleData.amount = document.getElementById('threshold-amount').value;
+                    ruleData.approver = document.getElementById('threshold-approver').value;
+                    break;
+                case 'hybrid':
+                    ruleData.condition = document.getElementById('hybrid-condition').value;
+                    ruleData.percentage = document.getElementById('hybrid-percentage').value;
+                    ruleData.approver = document.getElementById('hybrid-approver').value;
+                    break;
+            }
+            
+            // Here you would save to backend
+            console.log('Saving rule:', ruleData);
+            
+            closeModal('rule-modal');
+            alert('Approval rule saved successfully!');
+        }
+
+        function updateSequenceDisplay(step1, step2, step3) {
+            // Format role names properly
+            function formatRole(role) {
+                return role.split('-').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+            
+            // Update the sequence display with new values
+            const steps = document.querySelectorAll('.step-role');
+            steps[0].textContent = formatRole(step1);
+            steps[1].textContent = formatRole(step2);
+            steps[2].textContent = formatRole(step3);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
