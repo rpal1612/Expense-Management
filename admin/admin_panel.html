@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Expense Management Panel</title>
+    <style>
+        /* CSS from the provided file */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e5a8e;
+            --secondary-blue: #2a7bb8;
+            --accent-blue: #3d9dd9;
+            --dark-blue: #0d3b5f;
+            --light-blue: #e8f4fc;
+            --card-gradient: linear-gradient(135deg, #1e5a8e 0%, #2a7bb8 100%);
+            --bg-color: #f5f7fa;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --border-radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--card-gradient);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 0.8;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-blue);
+            font-weight: bold;
+        }
+
+        /* Page Sections */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Financial Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .financial-card {
+            background: var(--card-gradient);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            color: var(--text-light);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .financial-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .financial-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .card-header {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .card-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+
+        .card-number {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .card-action {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: none;
+            color: var(--text-light);
+        }
+
+        .card-action:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Forms */
+        .form-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            max-width: 100%; /* Wider card for admin view */
+            margin: 2rem 0;
+        }
+
+        .form-title {
+            color: var(--primary-blue);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--card-gradient);
+            color: var(--text-light);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 90, 142, 0.3);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: var(--text-light);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--text-light);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--text-light);
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--light-blue);
+            color: var(--primary-blue);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: var(--light-blue);
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        /* Approval Flow */
+        .approval-flow {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+        }
+
+        .approval-step {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: var(--light-blue);
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .approval-step.active {
+            background: var(--card-gradient);
+            color: var(--text-light);
+        }
+
+        .approval-step.completed {
+            background: var(--success);
+            color: var(--text-light);
+        }
+
+        .approval-arrow {
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-amount {
+                font-size: 2rem;
+            }
+
+            .form-card {
+                padding: 1.5rem;
+            }
+
+            .approval-flow {
+                flex-direction: column;
+            }
+
+            .approval-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            color: var(--primary-blue);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #7f8c8d;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--primary-blue);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .file-upload:hover {
+            background: var(--light-blue);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">💼 ExpenseFlow</div>
+            <ul>
+                <li><a href="#" onclick="showPage('user-management')">Users</a></li>
+                <li><a href="#" onclick="showPage('workflow-config')">Workflow</a></li>
+                <li><a href="#" onclick="showPage('all-expenses')">All Expenses</a></li>
+            </ul>
+            <div class="user-info">
+                <div class="user-avatar">JD</div>
+                <span style="color: white;">John Doe (Admin)</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div id="user-management" class="page active">
+            <div class="page-header">
+                <h1 class="page-title">User Management</h1>
+                <p class="page-subtitle">Create employees & managers, assign roles, and define relationships [cite: 13, 14, 15]</p>
+            </div>
+
+            <div class="cards-grid" style="margin-bottom: 2rem;">
+                <div class="financial-card">
+                    <div class="card-header">Total Employees</div>
+                    <div class="card-amount">24</div>
+                    <div class="card-number">Includes 4 Managers</div>
+                    <div class="card-actions">
+                        <button class="card-action" onclick="showModal('add-user-modal')">
+                            <span style="font-size: 1.5rem;">➕</span>
+                            <span>Add User [cite: 13]</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="financial-card">
+                    <div class="card-header">Company Default Currency</div>
+                    <div class="card-amount">USD</div>
+                    <div class="card-number">Set on initial signup [cite: 11]</div>
+                    <div class="card-actions">
+                        <button class="card-action">
+                            <span style="font-size: 1.5rem;">⚙️</span>
+                            <span>Settings</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <h2 style="color: var(--primary-blue); margin-bottom: 1rem;">Users & Roles</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role [cite: 14]</th>
+                            <th>Manager [cite: 15]</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>John Doe</td>
+                            <td>john@company.com</td>
+                            <td>Admin</td>
+                            <td>-</td>
+                            <td><button class="btn btn-secondary" style="padding: 0.4rem 1rem;" onclick="editUser(1)">Edit Role</button></td>
+                        </tr>
+                        <tr>
+                            <td>Sarah Johnson</td>
+                            <td>sarah@company.com</td>
+                            <td>Manager</td>
+                            <td>John Doe</td>
+                            <td><button class="btn btn-secondary" style="padding: 0.4rem 1rem;" onclick="editUser(2)">Edit Role</button></td>
+                        </tr>
+                        <tr>
+                            <td>Mike Chen</td>
+                            <td>mike@company.com</td>
+                            <td>Employee</td>
+                            <td>Sarah Johnson</td>
+                            <td><button class="btn btn-secondary" style="padding: 0.4rem 1rem;" onclick="editUser(3)">Edit Role</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="workflow-config" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Approval Workflow Configuration</h1>
+                <p class="page-subtitle">Define multi-level and conditional approval flows [cite: 5, 6, 7]</p>
+            </div>
+
+            <div class="form-card">
+                <h2 style="color: var(--primary-blue); margin-bottom: 1rem;">Multi-Level Approval Sequence [cite: 23, 24-31]</h2>
+                <div class="approval-flow">
+                    <div class="approval-step completed">
+                        <div style="font-weight: bold;">Step 1</div>
+                        <div>Manager [cite: 22]</div>
+                    </div>
+                    <div class="approval-arrow">→</div>
+                    <div class="approval-step active">
+                        <div style="font-weight: bold;">Step 2</div>
+                        <div>Finance</div>
+                    </div>
+                    <div class="approval-arrow">→</div>
+                    <div class="approval-step">
+                        <div style="font-weight: bold;">Step 3</div>
+                        <div>Director</div>
+                    </div>
+                </div>
+                <p style="text-align: right; margin-top: 1rem;"><a href="#" style="color: var(--primary-blue); text-decoration: none; font-weight: 500;">Edit Sequence</a></p>
+
+                <h2 style="color: var(--primary-blue); margin-bottom: 1.5rem; margin-top: 2rem;">Conditional Approval Rules [cite: 36, 37]</h2>
+                <div class="action-buttons" style="margin-bottom: 1.5rem;">
+                    <button class="btn btn-primary" onclick="showModal('add-rule-modal')">+ Add New Rule</button>
+                </div>
+                
+                <div style="background: var(--light-blue); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <div style="font-weight: bold; color: var(--primary-blue);">Percentage Rule</div>
+                            <div style="color: #7f8c8d; margin-top: 0.5rem;">If **60%** of approvers approve → Expense approved [cite: 39]</div>
+                        </div>
+                        <button class="btn btn-secondary" style="padding: 0.4rem 1rem;">Edit</button>
+                    </div>
+                </div>
+
+                <div style="background: var(--light-blue); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <div style="font-weight: bold; color: var(--primary-blue);">Specific Approver Rule</div>
+                            <div style="color: #7f8c8d; margin-top: 0.5rem;">If **CFO** approves → Expense auto-approved [cite: 40]</div>
+                        </div>
+                        <button class="btn btn-secondary" style="padding: 0.4rem 1rem;">Edit</button>
+                    </div>
+                </div>
+
+                <div style="background: var(--light-blue); padding: 1.5rem; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <div style="font-weight: bold; color: var(--primary-blue);">Threshold Rule</div>
+                            <div style="color: #7f8c8d; margin-top: 0.5rem;">Expenses > **$5,000** automatically require Director approval [cite: 5]</div>
+                        </div>
+                        <button class="btn btn-secondary" style="padding: 0.4rem 1rem;">Edit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="all-expenses" class="page">
+            <div class="page-header">
+                <h1 class="page-title">All Expenses</h1>
+                <p class="page-subtitle">View, search, and override all company expense claims [cite: 44]</p>
+            </div>
+            <div class="table-container">
+                <h2 style="color: var(--primary-blue); margin-bottom: 1rem;">Company-wide Expense Log</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Amount (USD)</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Current Approver</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Mike Chen</td>
+                            <td>Oct 3, 2025</td>
+                            <td>$285.50</td>
+                            <td>Meals</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td>Sarah Johnson (Manager)</td>
+                            <td><button class="btn btn-danger" style="padding: 0.4rem 1rem;" onclick="overrideApproval(1)">Override [cite: 44]</button></td>
+                        </tr>
+                        <tr>
+                            <td>Emily Davis</td>
+                            <td>Oct 2, 2025</td>
+                            <td>$1,250.00</td>
+                            <td>Transport</td>
+                            <td><span class="status-badge status-approved">Approved</span></td>
+                            <td>Finalized</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="color: var(--primary-blue);">Add New User</h2>
+                <button class="close-modal" onclick="closeModal('add-user-modal')">×</button>
+            </div>
+            <form onsubmit="addUser(event)">
+                <div class="form-group">
+                    <label>Full Name*</label>
+                    <input type="text" required placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label>Email*</label>
+                    <input type="email" required placeholder="user@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Role* [cite: 14]</label>
+                    <select required>
+                        <option value="">Select role</option>
+                        <option value="manager">Manager</option>
+                        <option value="employee">Employee</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Manager [cite: 15]</label>
+                    <select>
+                        <option value="">Select manager (for Employee role)</option>
+                        <option value="1">Sarah Johnson (Manager)</option>
+                        <option value="2">John Doe (Admin)</option>
+                    </select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="is-approver" checked>
+                    <label for="is-approver" style="margin-bottom: 0;">Is Manager Approver? [cite: 22]</label>
+                </div>
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('add-user-modal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-rule-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="color: var(--primary-blue);">Add Approval Rule</h2>
+                <button class="close-modal" onclick="closeModal('add-rule-modal')">×</button>
+            </div>
+            <form onsubmit="addRule(event)">
+                <div class="form-group">
+                    <label>Rule Type*</label>
+                    <select required id="rule-type" onchange="toggleRuleFields()">
+                        <option value="">Select rule type</option>
+                        <option value="percentage">Percentage Rule (e.g., 60%) [cite: 39]</option>
+                        <option value="specific">Specific Approver Rule (e.g., CFO) [cite: 40]</option>
+                        <option value="threshold">Threshold Rule (e.g., > $5000) [cite: 5]</option>
+                        <option value="hybrid">Hybrid Rule (Combine) [cite: 41]</option>
+                    </select>
+                </div>
+                <div class="form-group" id="percentage-field" style="display: none;">
+                    <label>Approval Percentage*</label>
+                    <input type="number" min="1" max="100" placeholder="e.g., 60">
+                </div>
+                <div class="form-group" id="approver-field" style="display: none;">
+                    <label>Specific Approver*</label>
+                    <select>
+                        <option value="">Select approver</option>
+                        <option value="cfo">CFO</option>
+                        <option value="director">Director</option>
+                    </select>
+                </div>
+                <div class="form-group" id="threshold-field" style="display: none;">
+                    <label>Amount Threshold*</label>
+                    <input type="number" step="0.01" placeholder="e.g., 5000">
+                </div>
+                <div class="form-group">
+                    <label>Rule Description*</label>
+                    <textarea required placeholder="Describe the approval rule..."></textarea>
+                </div>
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary">Add Rule</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('add-rule-modal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Page Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // Modal Functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // Form Submissions
+        function addUser(e) {
+            e.preventDefault();
+            alert('User added successfully! (In a real application, the table would update)');
+            closeModal('add-user-modal');
+        }
+
+        function addRule(e) {
+            e.preventDefault();
+            alert('Approval rule added successfully! (In a real application, the rules list would update)');
+            closeModal('add-rule-modal');
+        }
+
+        function editUser(userId) {
+            alert(`Editing user with ID: ${userId}.`);
+            // In a real application, this would open a pre-filled modal
+            showModal('add-user-modal');
+        }
+
+        function overrideApproval(expenseId) {
+            alert(`Admin override initiated for Expense ID: ${expenseId}.`);
+            // In a real app, this would execute the override logic
+        }
+
+        // Rule Type Toggle
+        function toggleRuleFields() {
+            const ruleType = document.getElementById('rule-type').value;
+            document.getElementById('percentage-field').style.display = 'none';
+            document.getElementById('approver-field').style.display = 'none';
+            document.getElementById('threshold-field').style.display = 'none';
+
+            if (ruleType === 'percentage' || ruleType === 'hybrid') {
+                document.getElementById('percentage-field').style.display = 'block';
+            }
+            if (ruleType === 'specific' || ruleType === 'hybrid') {
+                document.getElementById('approver-field').style.display = 'block';
+            }
+            if (ruleType === 'threshold') {
+                document.getElementById('threshold-field').style.display = 'block';
+            }
+        }
+
+        // Initialize (Default view)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Nothing to initialize besides event listeners
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Expense Portal</title>
+    <style>
+        /* CSS from the provided file */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e5a8e;
+            --secondary-blue: #2a7bb8;
+            --accent-blue: #3d9dd9;
+            --dark-blue: #0d3b5f;
+            --light-blue: #e8f4fc;
+            --card-gradient: linear-gradient(135deg, #1e5a8e 0%, #2a7bb8 100%);
+            --bg-color: #f5f7fa;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --border-radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--card-gradient);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 0.8;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-blue);
+            font-weight: bold;
+        }
+
+        /* Page Sections */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Financial Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .financial-card {
+            background: var(--card-gradient);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            color: var(--text-light);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .financial-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .financial-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .card-header {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .card-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+
+        .card-number {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .card-action {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: none;
+            color: var(--text-light);
+        }
+
+        .card-action:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Forms */
+        .form-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+
+        .form-title {
+            color: var(--primary-blue);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--card-gradient);
+            color: var(--text-light);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 90, 142, 0.3);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: var(--text-light);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--text-light);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--text-light);
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--light-blue);
+            color: var(--primary-blue);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: var(--light-blue);
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        /* Approval Flow */
+        .approval-flow {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+        }
+
+        .approval-step {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: var(--light-blue);
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .approval-step.active {
+            background: var(--card-gradient);
+            color: var(--text-light);
+        }
+
+        .approval-step.completed {
+            background: var(--success);
+            color: var(--text-light);
+        }
+
+        .approval-arrow {
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-amount {
+                font-size: 2rem;
+            }
+
+            .form-card {
+                padding: 1.5rem;
+            }
+
+            .approval-flow {
+                flex-direction: column;
+            }
+
+            .approval-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            color: var(--primary-blue);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #7f8c8d;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--primary-blue);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .file-upload:hover {
+            background: var(--light-blue);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">💼 ExpenseFlow</div>
+            <ul>
+                <li><a href="#" onclick="showPage('my-expenses')">My Expenses</a></li>
+                <li><a href="#" onclick="showPage('submit-expense')">Submit Expense</a></li>
+            </ul>
+            <div class="user-info">
+                <div class="user-avatar">ME</div>
+                <span style="color: white;">Mike Chen (Employee)</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div id="my-expenses" class="page active">
+            <div class="page-header">
+                <h1 class="page-title">My Expenses</h1>
+                <p class="page-subtitle">Track your submitted expenses and approval status [cite: 20]</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Submitted (Month)</div>
+                    <div class="stat-value">$1,581.25</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending Approval</div>
+                    <div class="stat-value">2</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Approved & Reimbursed</div>
+                    <div class="stat-value">$1,355.50</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Rejected</div>
+                    <div class="stat-value">$225.75</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 style="color: var(--primary-blue);">Expense History</h2>
+                    <button class="btn btn-primary" onclick="showPage('submit-expense')">+ New Expense</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Currency</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Oct 3, 2025</td>
+                            <td>Meals & Entertainment</td>
+                            <td>285.50</td>
+                            <td>USD</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 0.4rem 1rem;" onclick="viewExpenseDetail(1)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>Sep 28, 2025</td>
+                            <td>Transportation</td>
+                            <td>45.00</td>
+                            <td>EUR</td>
+                            <td><span class="status-badge status-rejected">Rejected [cite: 20]</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 0.4rem 1rem;" onclick="viewExpenseDetail(2)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>Sep 20, 2025</td>
+                            <td>Office Supplies</td>
+                            <td>125.75</td>
+                            <td>USD</td>
+                            <td><span class="status-badge status-approved">Approved [cite: 20]</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 0.4rem 1rem;" onclick="viewExpenseDetail(3)">View</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="submit-expense" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Submit Expense</h1>
+                <p class="page-subtitle">Submit expense claims in any currency [cite: 18]</p>
+            </div>
+
+            <div class="form-card">
+                <div class="file-upload" onclick="document.getElementById('receipt-upload').click()">
+                    <input type="file" id="receipt-upload" accept="image/*" onchange="handleReceiptUpload(event)">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📷</div>
+                    <h3>Upload Receipt (OCR Enabled) [cite: 46, 47]</h3>
+                    <p style="color: #7f8c8d; margin-top: 0.5rem;">OCR will auto-generate fields like Amount, Date, and Category [cite: 47]</p>
+                </div>
+
+                <div style="text-align: center; margin: 2rem 0; color: #7f8c8d;">OR</div>
+
+                <form id="expense-form" onsubmit="submitExpense(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Amount*</label>
+                            <input type="number" step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Currency* (Can be different from company's) [cite: 18]</label>
+                            <select id="currency-select" required>
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="INR">INR - Indian Rupee</option>
+                                </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category* [cite: 19]</label>
+                            <select required>
+                                <option value="">Select category</option>
+                                <option value="meals">Meals & Entertainment</option>
+                                <option value="transport">Transportation</option>
+                                <option value="accommodation">Accommodation</option>
+                                <option value="supplies">Office Supplies</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date* [cite: 19]</label>
+                            <input type="date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description* [cite: 19]</label>
+                        <textarea required placeholder="Enter expense details..."></textarea>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Submit Expense</button>
+                        <button type="button" class="btn btn-secondary" onclick="showPage('my-expenses')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="expense-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="color: var(--primary-blue);">Expense Details (E-1002)</h2>
+                <button class="close-modal" onclick="closeModal('expense-detail-modal')">×</button>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; padding: 0.8rem 0; border-bottom: 1px solid #e0e0e0;">
+                    <span style="color: #7f8c8d;">Amount:</span>
+                    <span style="font-weight: bold; color: var(--primary-blue);">$285.50 (USD)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.8rem 0; border-bottom: 1px solid #e0e0e0;">
+                    <span style="color: #7f8c8d;">Category:</span>
+                    <span style="font-weight: bold;">Meals & Entertainment</span>
+                </div>
+                <div style="padding: 1rem 0;">
+                    <span style="color: #7f8c8d; display: block; margin-bottom: 0.5rem;">Current Approval Step:</span>
+                    <div class="approval-flow">
+                        <div class="approval-step completed">
+                            <div style="font-weight: bold;">Manager</div>
+                            <div style="font-size: 0.85rem;">Approved</div>
+                        </div>
+                        <div class="approval-arrow">→</div>
+                        <div class="approval-step active">
+                            <div style="font-weight: bold;">Finance</div>
+                            <div style="font-size: 0.85rem;">Pending</div>
+                        </div>
+                        <div class="approval-arrow">→</div>
+                        <div class="approval-step">
+                            <div style="font-weight: bold;">Director</div>
+                            <div style="font-size: 0.85rem;">Waiting</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="action-buttons" style="margin-top: 2rem;">
+                <button class="btn btn-secondary" onclick="closeModal('expense-detail-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Page Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // Modal Functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // Form Submissions
+        function submitExpense(e) {
+            e.preventDefault();
+            alert('Expense submitted successfully! Awaiting manager approval.');
+            showPage('my-expenses');
+        }
+
+        // Expense Actions
+        function viewExpenseDetail(id) {
+            // Logic to fetch expense details based on ID and populate the modal
+            showModal('expense-detail-modal');
+        }
+
+        // OCR Receipt Upload
+        function handleReceiptUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Simulating OCR functionality [cite: 46, 47]
+                alert('Receipt uploaded! OCR processing...\n\nExtracted Information:\nAmount: 45.50\nCurrency: USD\nDate: Oct 4, 2025\nCategory: Meals');
+                // In a real implementation, this would populate the form fields
+            }
+        }
+
+        // Load currencies on page load
+        async function loadCurrencies() {
+            try {
+                // Using the provided API to get currencies [cite: 48]
+                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,currencies');
+                const countries = await response.json();
+                const currencySelect = document.getElementById('currency-select');
+                
+                // Extract unique currencies
+                const currencies = new Set();
+                countries.forEach(country => {
+                    if (country.currencies) {
+                        Object.keys(country.currencies).forEach(code => {
+                            const currency = country.currencies[code];
+                            currencies.add(JSON.stringify({
+                                code: code,
+                                name: currency.name
+                            }));
+                        });
+                    }
+                });
+
+                // Get existing common currencies to avoid duplication
+                const existingCodes = Array.from(currencySelect.options).map(opt => opt.value);
+                
+                // Add all unique currencies
+                Array.from(currencies).map(JSON.parse).sort((a, b) => a.code.localeCompare(b.code)).forEach(currency => {
+                    if (!existingCodes.includes(currency.code)) {
+                        const option = document.createElement('option');
+                        option.value = currency.code;
+                        option.textContent = `${currency.code} - ${currency.name}`;
+                        currencySelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading currencies:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrencies();
+        });
+    </script>
+</body>
+</html>
