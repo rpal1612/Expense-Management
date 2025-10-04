@@ -1,5 +1,6 @@
 import os
 import json
+import requests
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime
@@ -134,6 +135,31 @@ def create_test_users():
     except Exception as e:
         app.logger.error(f'Failed to create test users: {e}')
 
+def setup_company_data():
+    """Ensure company data exists with hardcoded values"""
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        
+        # Ensure the company record exists with hardcoded data
+        cursor.execute("""
+            INSERT INTO Companies (company_id, name, default_currency_code, created_at)
+            VALUES (1, 'ExpenseFlow Corp', 'USD', CURRENT_TIMESTAMP)
+            ON CONFLICT (company_id) 
+            DO UPDATE SET 
+                name = 'ExpenseFlow Corp'
+            WHERE Companies.name IS NULL OR Companies.name = ''
+        """)
+        
+        conn.commit()
+        app.logger.info("Company data initialized successfully")
+        
+    except Exception as e:
+        app.logger.error(f"Error setting up company data: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
 def setup_database_schema():
     """Set up database tables if they don't exist."""
     try:
@@ -169,6 +195,7 @@ def setup_database_schema():
                 cursor.close()
                 conn.close()
                 create_test_users()
+                setup_company_data()
             else:
                 app.logger.warning('db.sql file not found. Please create tables manually.')
         else:
@@ -177,6 +204,9 @@ def setup_database_schema():
             cursor.close()
             conn.close()
             create_test_users()
+            
+        # Always ensure company data is properly set up
+        setup_company_data()
             
         return True
         
@@ -223,6 +253,98 @@ def get_db_connection():
         raise ConnectionError("Could not connect to the database. Check DB_CONFIG and PostgreSQL service.") from e
 
 # --- 2. Helper Functions ---
+
+def get_exchange_rates(base_currency='USD'):
+    """Get current exchange rates from the API"""
+    try:
+        response = requests.get(f'https://api.exchangerate-api.com/v4/latest/{base_currency}', timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('rates', {})
+        else:
+            app.logger.error(f"Exchange rate API failed with status: {response.status_code}")
+            return None
+    except Exception as e:
+        app.logger.error(f"Error fetching exchange rates: {e}")
+        return None
+
+def convert_currency_amount(amount, from_currency, to_currency):
+    """Convert amount from one currency to another"""
+    if from_currency == to_currency:
+        return amount
+    
+    try:
+        # Get exchange rates with from_currency as base
+        rates = get_exchange_rates(from_currency)
+        if not rates or to_currency not in rates:
+            app.logger.error(f"Could not get exchange rate from {from_currency} to {to_currency}")
+            return amount  # Return original amount if conversion fails
+        
+        converted_amount = amount * rates[to_currency]
+        return round(converted_amount, 2)
+    except Exception as e:
+        app.logger.error(f"Currency conversion error: {e}")
+        return amount  # Return original amount if conversion fails
+
+def convert_all_expenses_to_new_currency(old_currency, new_currency):
+    """Convert all existing expenses from old currency to new currency"""
+    if old_currency == new_currency:
+        return True
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        # Get all expenses that need conversion
+        cursor.execute("""
+            SELECT expense_id, amount, currency_code 
+            FROM Expenses 
+            WHERE currency_code = %s
+        """, (old_currency,))
+        
+        expenses_to_convert = cursor.fetchall()
+        
+        if not expenses_to_convert:
+            app.logger.info(f"No expenses found in {old_currency} to convert")
+            return True
+        
+        app.logger.info(f"Converting {len(expenses_to_convert)} expenses from {old_currency} to {new_currency}")
+        
+        # Get exchange rate
+        rates = get_exchange_rates(old_currency)
+        if not rates or new_currency not in rates:
+            app.logger.error(f"Could not get exchange rate from {old_currency} to {new_currency}")
+            return False
+        
+        conversion_rate = rates[new_currency]
+        converted_count = 0
+        
+        # Convert each expense
+        for expense in expenses_to_convert:
+            old_amount = float(expense['amount'])
+            new_amount = round(old_amount * conversion_rate, 2)
+            
+            cursor.execute("""
+                UPDATE Expenses 
+                SET amount = %s, currency_code = %s 
+                WHERE expense_id = %s
+            """, (new_amount, new_currency, expense['expense_id']))
+            
+            converted_count += 1
+        
+        conn.commit()
+        app.logger.info(f"Successfully converted {converted_count} expenses from {old_currency} to {new_currency}")
+        return True
+        
+    except Exception as e:
+        app.logger.error(f"Error converting expenses: {e}")
+        conn.rollback()
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
+# Original helper functions continue below...
 
 def execute_query(sql, params=None, fetch_mode='all'):
     """Helper function to execute SQL queries and handle connections/cursors."""
@@ -325,7 +447,12 @@ def index():
 # Serve static dashboard pages for roles (admin, manager, employee)
 @app.route('/admin/dashboard', methods=['GET'])
 def admin_dashboard():
-    return send_from_directory(os.path.join(BASE_DIR, 'admin'), 'admin_panel.html')
+    return send_from_directory(os.path.join(BASE_DIR, 'admin'), 'admin_user_management.html')
+
+
+@app.route('/admin/workflow', methods=['GET'])
+def admin_workflow():
+    return send_from_directory(os.path.join(BASE_DIR, 'admin'), 'approval_workflow.html')
 
 
 @app.route('/manager/dashboard', methods=['GET'])
@@ -562,6 +689,514 @@ def health_check():
         return jsonify({'status': 'degraded', 'db': 'unreachable', 'error': str(e)}), 503
 
 
+# --- Admin User Management Endpoints ---
+
+@app.route('/api/admin/dashboard-stats', methods=['GET'])
+def get_dashboard_stats():
+    """Get dashboard statistics for admin panel"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        # Get total employees count
+        cursor.execute("SELECT COUNT(*) as total_users FROM Users WHERE role != 'Admin'")
+        user_stats = cursor.fetchone()
+        total_employees = user_stats['total_users']
+        
+        # Get managers count
+        cursor.execute("SELECT COUNT(*) as total_managers FROM Users WHERE role = 'Manager'")
+        manager_stats = cursor.fetchone()
+        total_managers = manager_stats['total_managers']
+        
+        # Get company default currency
+        cursor.execute("SELECT default_currency_code, name FROM Companies LIMIT 1")
+        company_info = cursor.fetchone()
+        default_currency = company_info['default_currency_code'] if company_info else 'USD'
+        company_name = company_info['name'] if company_info else 'ExpenseFlow'
+        
+        # Get total users count (all users)
+        cursor.execute("SELECT COUNT(*) as total_all_users FROM Users")
+        all_user_stats = cursor.fetchone()
+        total_all_users = all_user_stats['total_all_users']
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'total_employees': total_employees,
+            'total_managers': total_managers,
+            'total_all_users': total_all_users,
+            'default_currency': default_currency,
+            'company_name': company_name
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f'Failed to get dashboard stats: {e}')
+        return jsonify({'message': 'Failed to load dashboard statistics'}), 500
+
+
+@app.route('/api/admin/currency', methods=['PUT'])
+def update_company_currency():
+    """Update company default currency and convert all existing expenses"""
+    try:
+        payload = request.get_json() or {}
+        new_currency_code = payload.get('currency_code')
+        
+        if not new_currency_code:
+            return jsonify({'message': 'Currency code is required'}), 400
+        
+        # Validate currency code (basic validation)
+        valid_currencies = ['USD', 'EUR', 'GBP', 'JPY', 'INR', 'CAD', 'AUD', 'CHF', 'CNY', 'SGD']
+        if new_currency_code not in valid_currencies:
+            return jsonify({'message': 'Invalid currency code'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        # Get current currency first
+        cursor.execute("SELECT default_currency_code FROM Companies WHERE company_id = 1")
+        current_company = cursor.fetchone()
+        old_currency_code = current_company['default_currency_code'] if current_company else 'USD'
+        
+        # Check if currency is actually changing
+        if old_currency_code == new_currency_code:
+            cursor.close()
+            conn.close()
+            return jsonify({
+                'message': f'Currency is already set to {new_currency_code}',
+                'new_currency': new_currency_code
+            }), 200
+        
+        # Update company currency first
+        cursor.execute("""
+            INSERT INTO Companies (company_id, name, default_currency_code, created_at)
+            VALUES (1, 'ExpenseFlow Corp', %s, CURRENT_TIMESTAMP)
+            ON CONFLICT (company_id) 
+            DO UPDATE SET 
+                default_currency_code = EXCLUDED.default_currency_code,
+                name = 'ExpenseFlow Corp'
+        """, (new_currency_code,))
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({'message': 'Failed to update company currency'}), 500
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Convert all existing expenses to new currency
+        app.logger.info(f'Converting expenses from {old_currency_code} to {new_currency_code}')
+        conversion_success = convert_all_expenses_to_new_currency(old_currency_code, new_currency_code)
+        
+        if not conversion_success:
+            app.logger.warning(f'Currency updated but expense conversion failed from {old_currency_code} to {new_currency_code}')
+            return jsonify({
+                'message': f'Currency updated to {new_currency_code}, but some expenses could not be converted. Please check the logs.',
+                'new_currency': new_currency_code,
+                'conversion_warning': True
+            }), 200
+        
+        app.logger.info(f'Company currency and expenses successfully updated to: {new_currency_code}')
+        
+        return jsonify({
+            'message': f'Currency successfully updated to {new_currency_code}. All expenses have been converted.',
+            'new_currency': new_currency_code,
+            'expenses_converted': True
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f'Failed to update currency: {e}')
+        return jsonify({'message': 'Failed to update currency'}), 500
+
+
+@app.route('/api/admin/users', methods=['GET'])
+def get_all_users():
+    """Get all users for admin management"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        # Get all users with their manager information
+        cursor.execute("""
+            SELECT 
+                u.user_id,
+                u.full_name,
+                u.email,
+                u.role,
+                u.is_manager_approver,
+                u.created_at,
+                m.full_name as manager_name,
+                m.user_id as manager_id,
+                c.name as company_name
+            FROM Users u
+            LEFT JOIN Users m ON u.manager_id = m.user_id
+            LEFT JOIN Companies c ON u.company_id = c.company_id
+            ORDER BY u.created_at DESC
+        """)
+        
+        users = cursor.fetchall()
+        users_list = [dict(user) for user in users]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify(users_list), 200
+        
+    except Exception as e:
+        app.logger.error(f'Failed to fetch users: {e}')
+        return jsonify({'message': 'Failed to fetch users'}), 500
+
+@app.route('/api/admin/users', methods=['POST'])
+def create_user():
+    """Admin creates a new user"""
+    try:
+        payload = request.get_json() or {}
+        full_name = payload.get('full_name')
+        email = payload.get('email')
+        role = payload.get('role', 'Employee')
+        manager_id = payload.get('manager_id')
+        
+        if not all([full_name, email]):
+            return jsonify({'message': 'Full name and email are required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if email already exists
+        cursor.execute("SELECT 1 FROM Users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({'message': 'Email already exists'}), 400
+        
+        # Generate temporary password
+        import secrets
+        import string
+        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+        password_hash = generate_password_hash(temp_password)
+        
+        # Set manager approver flag
+        is_manager_approver = role.lower() == 'manager'
+        
+        # Insert user
+        cursor.execute("""
+            INSERT INTO Users (company_id, full_name, email, password_hash, role, manager_id, is_manager_approver)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING user_id
+        """, (1, full_name, email, password_hash, role, manager_id, is_manager_approver))
+        
+        new_user_id = cursor.fetchone()[0]
+        conn.commit();
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'message': 'User created successfully',
+            'user_id': str(new_user_id),
+            'temporary_password': temp_password
+        }), 201
+        
+    except Exception as e:
+        app.logger.error(f'Failed to create user: {e}')
+        return jsonify({'message': 'Failed to create user'}), 500
+
+@app.route('/api/admin/users/<user_id>', methods=['PUT'])
+def update_user(user_id):
+    """Admin updates user role and manager"""
+    try:
+        payload = request.get_json() or {}
+        role = payload.get('role')
+        manager_id = payload.get('manager_id')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Build update query dynamically
+        updates = []
+        params = []
+        
+        if role:
+            updates.append("role = %s")
+            params.append(role)
+            # Update manager approver flag
+            updates.append("is_manager_approver = %s")
+            params.append(role.lower() == 'manager')
+        
+        if manager_id is not None:  # Allow setting manager to None
+            updates.append("manager_id = %s")
+            params.append(manager_id if manager_id else None)
+        
+        if not updates:
+            return jsonify({'message': 'No updates provided'}), 400
+        
+        params.append(user_id)
+        query = f"UPDATE Users SET {', '.join(updates)} WHERE user_id = %s"
+        
+        cursor.execute(query, params)
+        
+        if cursor.rowcount == 0:
+            return jsonify({'message': 'User not found'}), 404
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'message': 'User updated successfully'}), 200
+        
+    except Exception as e:
+        app.logger.error(f'Failed to update user: {e}')
+        return jsonify({'message': 'Failed to update user'}), 500
+
+@app.route('/api/admin/managers', methods=['GET'])
+def get_managers():
+    """Get all users with manager role for dropdowns"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        cursor.execute("""
+            SELECT user_id, full_name, email
+            FROM Users 
+            WHERE role = 'Manager' OR role = 'Admin'
+            ORDER BY full_name
+        """)
+        
+        managers = cursor.fetchall()
+        managers_list = [dict(manager) for manager in managers]
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify(managers_list), 200
+        
+    except Exception as e:
+        app.logger.error(f'Failed to fetch managers: {e}')
+        return jsonify({'message': 'Failed to fetch managers'}), 500
+
+@app.route('/api/admin/send-password/<user_id>', methods=['POST'])
+def send_password_reset(user_id):
+    """Send password reset to user (simulated for now)"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        cursor.execute("SELECT full_name, email FROM Users WHERE user_id = %s", (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
+        
+        # Generate new temporary password
+        import secrets
+        import string
+        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+        password_hash = generate_password_hash(temp_password)
+        
+        # Update password
+        cursor.execute("UPDATE Users SET password_hash = %s WHERE user_id = %s", (password_hash, user_id))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        
+        # In a real app, you'd send an email here
+        app.logger.info(f'Password reset for {user["email"]}: {temp_password}')
+        
+        return jsonify({
+            'message': 'Password reset successfully',
+            'temporary_password': temp_password,
+            'user_email': user['email']
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f'Failed to reset password: {e}')
+        return jsonify({'message': 'Failed to reset password'}), 500
+
+
+@app.route('/api/admin/users/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    """Delete a user from the system"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        # First, check if user exists and get user details
+        cursor.execute("SELECT full_name, email, role FROM Users WHERE user_id = %s", (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
+        
+        # Prevent deletion of admin users (safety measure)
+        if user['role'] == 'Admin':
+            return jsonify({'message': 'Cannot delete admin users for security reasons'}), 403
+        
+        # Start transaction for safe deletion
+        cursor.execute("BEGIN")
+        
+        try:
+            # Check if user has any expenses - prevent deletion if they do
+            cursor.execute("SELECT COUNT(*) FROM Expenses WHERE user_id = %s", (user_id,))
+            expense_count = cursor.fetchone()[0]
+            
+            if expense_count > 0:
+                cursor.execute("ROLLBACK")
+                return jsonify({
+                    'message': f'Cannot delete user "{user["full_name"]}" because they have {expense_count} expense(s) in the system. Please transfer or delete their expenses first.'
+                }), 400
+            
+            # Update any approval transactions that reference this user
+            cursor.execute("""
+                UPDATE ApprovalTransactions 
+                SET approver_id = NULL 
+                WHERE approver_id = %s
+            """, (user_id,))
+            
+            # Update any users who have this user as manager
+            cursor.execute("""
+                UPDATE Users 
+                SET manager_id = NULL 
+                WHERE manager_id = %s
+            """, (user_id,))
+            
+            # Finally, delete the user
+            cursor.execute("DELETE FROM Users WHERE user_id = %s", (user_id,))
+            
+            # Check if the deletion was successful
+            if cursor.rowcount == 0:
+                cursor.execute("ROLLBACK")
+                return jsonify({'message': 'User could not be deleted'}), 400
+            
+            # Commit the transaction
+            cursor.execute("COMMIT")
+            
+            cursor.close()
+            conn.close()
+            
+            app.logger.info(f'User deleted successfully: {user["full_name"]} ({user["email"]})')
+            
+            return jsonify({
+                'message': f'User "{user["full_name"]}" has been successfully deleted',
+                'deleted_user': {
+                    'user_id': user_id,
+                    'full_name': user['full_name'],
+                    'email': user['email']
+                }
+            }), 200
+            
+        except Exception as e:
+            # Rollback on any error during deletion process
+            cursor.execute("ROLLBACK")
+            raise e
+        
+    except Exception as e:
+        app.logger.error(f'Failed to delete user {user_id}: {e}')
+        return jsonify({'message': f'Failed to delete user: {str(e)}'}), 500
+
+
+@app.route('/api/admin/all-expenses', methods=['GET'])
+def get_all_expenses():
+    """Get all expenses for admin override capabilities"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        # Fetch all expenses with user and approver details
+        cursor.execute("""
+            SELECT 
+                e.expense_id,
+                e.submitted_amount,
+                e.submitted_currency,
+                e.converted_amount,
+                e.category,
+                e.description,
+                e.status,
+                e.expense_date,
+                e.created_at,
+                u.full_name as employee_name,
+                u.email as employee_email,
+                COALESCE(m.full_name, 'No Manager') as current_approver,
+                CASE 
+                    WHEN e.status = 'Approved' THEN 'Finalized'
+                    WHEN e.status = 'Rejected' THEN m.full_name
+                    ELSE COALESCE(m.full_name, 'Pending Assignment')
+                END as approver_display
+            FROM Expenses e
+            JOIN Users u ON e.user_id = u.user_id
+            LEFT JOIN Users m ON u.manager_id = m.user_id
+            ORDER BY e.created_at DESC
+        """)
+        
+        expenses = cursor.fetchall()
+        
+        # Convert to list of dictionaries for JSON response
+        expenses_list = []
+        for expense in expenses:
+            expenses_list.append({
+                'expense_id': expense['expense_id'],
+                'employee_name': expense['employee_name'],
+                'employee_email': expense['employee_email'],
+                'amount': float(expense['submitted_amount']),
+                'currency': expense['submitted_currency'],
+                'converted_amount': float(expense['converted_amount']),
+                'category': expense['category'],
+                'description': expense['description'],
+                'status': expense['status'],
+                'submission_date': expense['expense_date'].strftime('%b %d, %Y') if expense['expense_date'] else '',
+                'created_at': expense['created_at'].strftime('%b %d, %Y') if expense['created_at'] else '',
+                'current_approver': expense['current_approver'],
+                'approver_display': expense['approver_display']
+            })
+        
+        return jsonify(expenses_list), 200
+        
+    except Exception as e:
+        app.logger.error(f'Failed to fetch all expenses: {e}')
+        return jsonify({'message': f'Failed to fetch expenses: {str(e)}'}), 500
+
+
+@app.route('/api/admin/override-expense/<expense_id>', methods=['POST'])
+def override_expense(expense_id):
+    """Override expense approval/rejection"""
+    try:
+        data = request.get_json()
+        action = data.get('action')  # 'approve' or 'reject'
+        
+        if action not in ['approve', 'reject']:
+            return jsonify({'message': 'Invalid action. Must be approve or reject'}), 400
+            
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=extras.DictCursor)
+        
+        # Check if expense exists
+        cursor.execute("SELECT * FROM Expenses WHERE expense_id = %s", (expense_id,))
+        expense = cursor.fetchone()
+        
+        if not expense:
+            return jsonify({'message': 'Expense not found'}), 404
+            
+        # Update expense status
+        new_status = 'Approved' if action == 'approve' else 'Rejected'
+        cursor.execute("""
+            UPDATE Expenses 
+            SET status = %s
+            WHERE expense_id = %s
+        """, (new_status, expense_id))
+        
+        conn.commit()
+        
+        return jsonify({
+            'message': f'Expense successfully {action}d via admin override',
+            'expense_id': expense_id,
+            'new_status': new_status
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f'Failed to override expense {expense_id}: {e}')
+        return jsonify({'message': f'Failed to override expense: {str(e)}'}), 500
+
+
+# Start the Flask application
 if __name__ == '__main__':
-    # Flask runs the server on http://localhost:3000
     app.run(host='0.0.0.0', port=3000, debug=True)
