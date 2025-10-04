@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Expenses</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 32px;
+            font-weight: 600;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #38b2ac;
+        }
+
+        .stat-label {
+            color: #234e52;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: #234e52;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f7fafc;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .category-food { background: #fef5e7; color: #7d6608; }
+        .category-transportation { background: #ebf8ff; color: #2c5282; }
+        .category-groceries { background: #f0fff4; color: #22543d; }
+        .category-lodging { background: #fef5ff; color: #6b46c1; }
+        .category-entertainment { background: #ffe4e6; color: #9b2c2c; }
+        .category-office { background: #e6fffa; color: #234e52; }
+        .category-miscellaneous { background: #edf2f7; color: #2d3748; }
+
+        .amount {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h2 {
+            color: #4a5568;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 12px 8px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 All Expenses</h1>
+            <a href="/" class="btn-back">← Back to Upload</a>
+        </div>
+
+        {% if expenses %}
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Expenses</div>
+                    <div class="stat-value">{{ expenses|length }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Amount (INR)</div>
+                    <div class="stat-value">
+                        {% set total = namespace(value=0) %}
+                        {% for expense in expenses %}
+                            {% if expense.currency == 'INR' %}
+                                {% set total.value = total.value + expense.amount %}
+                            {% endif %}
+                        {% endfor %}
+                        ₹{{ "%.2f"|format(total.value) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td>{{ expense.date.strftime('%d-%m-%Y') if expense.date else 'N/A' }}</td>
+                            <td>{{ expense.description[:50] }}{% if expense.description|length > 50 %}...{% endif %}</td>
+                            <td>
+                                <span class="category-badge category-{{ expense.category.lower().replace(' & ', '-').replace(' ', '-') }}">
+                                    {{ expense.category }}
+                                </span>
+                            </td>
+                            <td class="amount">
+                                {% if expense.currency == 'INR' %}₹{% elif expense.currency == 'USD' %}${% elif expense.currency == 'EUR' %}€{% elif expense.currency == 'GBP' %}£{% endif %}
+                                {{ "%.2f"|format(expense.amount) }} {{ expense.currency }}
+                            </td>
+                            <td>{{ expense.created_at.strftime('%d-%m-%Y %H:%M') if expense.created_at else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h2>No Expenses Yet</h2>
+                <p>Start by uploading your first receipt to track your expenses</p>
+                <a href="/" class="btn-upload">Upload Receipt</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
